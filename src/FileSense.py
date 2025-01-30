@@ -34,7 +34,7 @@ def main():
                     user_input = input(f"Move {file_path} to {label_dir}? (y/n): ")
                     if user_input.lower() != 'y' or user_input.lower() != 'Y':
                         print(f"[-]  Skipping file .{file_path[label:]}....")
-                        continue  # Skip this file if the user doesn't accept the change
+                        continue  # Skip this file if the user doesn't accept the change 
                         
                 shutil.copy(file_path, label_dir)
                 print(f"Moved {file_path} to {label_dir}")

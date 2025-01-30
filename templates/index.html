@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tree Data Viewer</title>
+    <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+    <div id="container">
+        <div id="left-panel">
+            <img id="logo" src="../static/logo.png" alt="Logo">
+            <div id="about">
+                <p>Some information about the application.</p>
+                <p>More details can be added here.</p>
+            </div>
+            <div id="input-area">
+                <input type="text" id="input-text">
+                <button id="input-button">Process</button>
+            </div>
+        </div>
+        <div id="middle-panel"></div>
+        <div id="right-panel">
+            <div id="details-area">Select an item in the tree to see details.</div>
+        </div>
+    </div>
+    <script src="../scripts/data-processor.js"></script>
+    <script src="../scripts/tree-generator.js"></script>
+    <script src="../scripts/main.js"></script>
+</body>
+</html>
