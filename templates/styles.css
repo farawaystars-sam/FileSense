@@ -13,10 +13,10 @@ body, html {
 }
 
 #left-panel {
-    background-color: #106EBE;
-    width: 200px;
-    padding: 10px;
-    border-right: 1px solid #efefef;
+    background-color: beige;
+    width: 250px;
+    padding: 50px;
+    border-right: 1px solid #686565;
     overflow-y: auto;
 }
 
@@ -43,7 +43,7 @@ body, html {
 }
 
 #middle-panel {
-    background-color: #106EBE;
+    background-color: beige;
     flex-grow: 1;
     padding: 10px;
     overflow-y: auto;
@@ -69,9 +69,9 @@ body, html {
 }
 
 #right-panel {
-    background-color: #106EBE;
+    background-color: beige;
     width: 250px;
-    padding: 10px;
-    border-left: 1px solid #eae8e8;
+    padding: 50px;
+    border-left: 1px solid #4e4c4c;
     overflow-y: auto;
 }
