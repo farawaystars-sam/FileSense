@@ -1,0 +1,178 @@
+.App {
+  text-align: left;
+  height: 100vh;
+  background-color: #ffffff;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.panel {
+  border: 1px solid #ccc;
+  padding: 20px;
+  height: 100%;
+  background-color: white;
+  overflow-y: auto;
+}
+
+.logo-box {
+  width: 80px;
+  height: 80px;
+  border: 2px solid #2196f3;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 20px;
+  background-color: #e3f2fd;
+  color: #2196f3;
+  transition: all 0.3s ease;
+}
+
+.logo-box:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.2);
+}
+
+.folder-tree {
+  padding: 10px;
+}
+
+.folder-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.folder-item:hover {
+  background-color: #f5f5f5;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  border: 1px solid #ccc;
+  margin-right: 8px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.checkbox:hover {
+  border-color: #2196f3;
+  background-color: #e3f2fd;
+}
+
+.folder-icon {
+  font-weight: bold;
+}
+
+.path-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.process-button {
+  width: 100%;
+  padding: 8px;
+  background-color: white;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.process-button:hover {
+  background-color: #f5f5f5;
+}
+
+.info-panel {
+  padding: 20px;
+}
+
+.info-title {
+  font-size: 18px;
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.file-summary {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.file-summary:last-child {
+  border-bottom: none;
+}
+
+.error-message {
+  color: #d32f2f;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+.proposed-changes {
+  margin: 8px 0 8px 24px;
+  padding: 8px;
+  background-color: #e3f2fd;
+  border-left: 2px solid #2196f3;
+  border-radius: 4px;
+}
+
+.proposed-structure {
+  margin: 4px 0;
+  padding: 8px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.proposed-item {
+  margin: 4px 0;
+  padding: 2px 0;
+}
