@@ -1,0 +1,19 @@
+Recipe Recommendation from the Ingredients 
+System Flutter
+1) Background/ Problem Statement
+People nowadays become very much health conscious and, they try to 
+take at most healthy food in their meal. An appropriate food recipe 
+must require serving the real taste of the food and a balanced diet, and 
+healthy life. As we all know, health is wealth, so food selection is 
+essential for better health. 
+Sometimes people pick some ingredients that they do not even know 
+their names. Or pick up some ingredients from a grocery store, but they 
+do not know how to make recipes using those ingredients. For a 
+beginner, it is very challenging to select a recipe just by seeing the
+ingredients. Even for an expert cook, it is also problematic. 
+Our flutter-based Recipe Recommendation System helps users by 
+recommending recipes from the given food ingredients. The system 
+implements an approach to recognizing food ingredients, and after 
+analyzing and classifying these recognized ingredients, food that can be 
+cooked with compatible recipes will be recommended. 
+
