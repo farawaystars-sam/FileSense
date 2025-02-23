@@ -252,4 +252,58 @@ body {
     flex-direction: column;
   }
   
-  
+  .panel-b-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 10px;
+    background-color: #CCCCCC; /* Grey */
+    /*border-top: 2px solid #D9B056; /* Gold Accent */
+}
+
+.panel-b-footer button {
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    color: #ffffff; /* White Text */
+    border-radius: 5px;
+}
+
+#acceptBtn {
+    background-color: #82a927; /* Gold Accent now green */
+}
+
+#rejectBtn {
+    background-color: #cc0000; /* Red */
+}
+
+.panel-b-footer button:hover {
+    opacity: 0.8;
+}
+
+/* Footer Section */
+.main-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #003366; /* Dark Blue */
+    color: #D9B056; /* Gold Accent */
+    text-align: center;
+    padding: 10px;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.main-footer a {
+    color: #cccccc; /* Grey */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.main-footer a:hover {
+    color: #D9B056; /* Gold */
+}

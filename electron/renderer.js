@@ -180,3 +180,45 @@ document.addEventListener("DOMContentLoaded", () => {
       createTreeViewB(data_for_b, treeViewElementB);
   }
 });
+
+// Function to handle "Accept" button click
+function onAcceptClick() {
+  try {
+      console.log("✅ Accept button clicked.");
+      alert("Action Accepted!");
+      // TODO: Add logic for processing accepted items
+  } catch (error) {
+      console.error("Error handling Accept button:", error);
+      alert("An error occurred while processing Accept.");
+  }
+}
+
+// Function to handle "Reject" button click
+function onRejectClick() {
+  try {
+      console.log("❌ Reject button clicked.");
+      alert("Action Rejected!");
+      // TODO: Add logic for handling rejection
+  } catch (error) {
+      console.error("Error handling Reject button:", error);
+      alert("An error occurred while processing Reject.");
+  }
+}
+
+// Attach event listeners when DOM loads
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("acceptBtn").addEventListener("click", onAcceptClick);
+  document.getElementById("rejectBtn").addEventListener("click", onRejectClick);
+});
+
+
+// For reading the version num for the footer section
+const { ipcRenderer } = require("electron");
+
+// Request project version from main process
+ipcRenderer.send("get-app-version");
+
+// Receive and display the project version
+ipcRenderer.on("app-version", (event, version) => {
+    document.getElementById("projectVersion").textContent = `Version: ${version}`;
+});

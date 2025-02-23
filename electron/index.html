@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Electron UI</title>
+  <title>FileSense v.1.0.0</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -27,6 +27,13 @@
     <div class="tree-container">
       <ul id="treeViewB"></ul>
     </div>
+
+    <!-- Add this inside Panel B's container, at the bottom -->
+    <div class="panel-b-footer">
+        <button id="acceptBtn">Accept</button>
+        <button id="rejectBtn">Reject</button>
+    </div>
+
   </div>
   
   
@@ -34,12 +41,18 @@
     <div class="panel panel-c">
       <div class="logo-container">
         <img src="./logo.png" alt="Project Logo" class="logo">
-        <p class="project-text">This is my project</p>
+        <p class="project-text">An AI powered files reorganization tool that just makes sense!</p>
       </div>
     </div>
   </div>
     
     <script src="renderer.js"></script>
   </body>
-  
+  <!-- Footer Section -->
+<footer class="main-footer">
+    <span id="projectVersion">Version: Loading...</span>
+    <span>♥ Made with Electron. © All rights reserved.</span>
+    <a href="https://github.com/farawaystars-sam" target="_blank">GitHub</a>
+</footer>
+
 </html>

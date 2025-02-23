@@ -31,3 +31,13 @@ app.on('window-all-closed', () => {
     app.quit();
   }
 });
+
+
+// For versioning in the footer
+const { app, ipcMain } = require("electron");
+const packageJson = require("./package.json");
+
+// Listen for version request from renderer process
+ipcMain.on("get-app-version", (event) => {
+    event.sender.send("app-version", packageJson.version);
+});
