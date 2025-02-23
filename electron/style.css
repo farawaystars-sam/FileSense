@@ -1,0 +1,255 @@
+/* Apply the overall background color */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #003366;  /* Dark Blue */
+    color: #CCCCCC;  /* Grey */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .container {
+    text-align: center;
+    padding: 20px;
+    background-color: #FFFFFF;  /* White Background for contrast */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 80%;
+    max-width: 500px;
+  }
+  
+  h1 {
+    color: #003366;  /* Dark Blue */
+  }
+  
+  .description {
+    color: #666666;  /* Slightly darker Grey for readability */
+    font-size: 1.1em;
+    margin: 15px 0;
+  }
+  
+  button {
+    background-color: #D9B056;  /* Gold Accent */
+    color: #003366;  /* Dark Blue Text */
+    border: none;
+    padding: 12px 25px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  
+  button:hover {
+    background-color: #B89442;  /* Darker Gold for Hover */
+  }
+
+/* Top Bar Styling */
+.top-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #003366;  /* Dark Blue */
+    padding: 15px;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+  
+  /* Input Box */
+  #inputBox {
+    flex: 1;  /* Fills available space */
+    max-width: 300px;
+    padding: 10px;
+    border: 1px solid #CCCCCC;  /* Grey Border */
+    border-radius: 5px;
+    margin-right: 10px;
+    font-size: 16px;
+  }
+  
+  /* Process Button */
+  #processButton {
+    background-color: #D9B056;  /* Gold Accent */
+    color: #003366;  /* Dark Blue */
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  
+  #processButton:hover {
+    background-color: #B89442;  /* Darker Gold for Hover */
+  }
+  
+  /* Adjust container to account for fixed top bar */
+  .container {
+    margin-top: 80px;  /* Push content below the top bar */
+  }
+  
+  /* Main content layout - Panels A, B, C */
+.main-content {
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 80px); /* Full height minus the top bar */
+    padding: 20px;
+    box-sizing: border-box;
+    gap: 10px; /* Space between panels */
+  }
+  
+  /* Panel Base Styling */
+  .panel {
+    flex: 1; /* Make all panels equal width */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #FFFFFF;  /* White text for contrast */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Individual Panel Colors */
+  .panel-a {
+    background-color: #003366;  /* Dark Blue */
+  }
+  
+  .panel-b {
+    background-color: #CCCCCC;  /* Grey */
+    color: #003366;  /* Dark Blue text */
+  }
+  
+  .panel-c {
+    background-color: #D9B056;  /* Gold Accent */
+    flex-direction: column;
+    position: relative; /* Needed for positioning the logo container */
+  }
+  
+  /* Logo Container in Panel C */
+  .logo-container {
+    position: absolute;
+    top: 10%; /* Positioning 40% from the top */
+    text-align: center;
+    width: 100%;
+  }
+  
+  /* Logo Image */
+  .logo {
+    max-width: 100px; /* Adjust size as needed */
+    height: auto;
+    margin-bottom: 10px;
+  }
+  
+  /* Project Text */
+  .project-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: #003366;  /* Dark Blue */
+  }
+  
+/* Panel A Styling */
+.panel-a {
+    background-color: #003366;  /* Dark Blue */
+    color: #FFFFFF;  /* White text for contrast */
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    overflow-y: auto; /* Allow scrolling for long trees */
+  }
+  
+  /* Tree Container */
+  .tree-container {
+    width: 100%;
+  }
+  
+  /* Tree View Styling */
+  ul {
+    list-style-type: none;
+    padding-left: 20px;
+  }
+  
+  ul li {
+    margin: 5px 0;
+    font-size: 16px;
+    font-weight: normal;
+  }
+  
+  ul li::before {
+    content: "|__";
+    color: #D9B056;  /* Gold Accent */
+    font-weight: bold;
+    margin-right: 5px;
+  }
+  
+/* Styling checkboxes for better appearance */
+.tree-container input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+  }
+  
+  /* Align checkboxes properly with text */
+  .tree-container li {
+    display: flex;
+    align-items: center;
+  }
+ 
+/* Panel A Styling Update */
+.panel-a {
+    background-color: #003366;  /* Dark Blue */
+    color: #FFFFFF;  /* White text for contrast */
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    overflow-y: auto; /* Allow scrolling for long trees */
+    flex-direction: column;
+  }
+  
+  /* Tile Container */
+  .tile {
+    display: flex;
+    align-items: center;
+    background-color: #D9B056; /* Gold Accent */
+    color: #003366; /* Dark Blue Text */
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin: 5px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
+    cursor: pointer;
+  }
+  
+  .tile:hover {
+    transform: translateY(-2px);
+  }
+  
+  /* Checkbox alignment inside tiles */
+  .tile input[type="checkbox"] {
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  
+  /* Sub-items (Indented Tiles) */
+  .sub-tile {
+    background-color: #CCCCCC; /* Grey */
+    color: #003366;
+    margin-left: 20px; /* Indent sub-items */
+  }
+
+  /* Panel B Styling - Similar to Panel A */
+.panel-b {
+    background-color: #CCCCCC; /* Grey */
+    color: #003366; /* Dark Blue Text */
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    overflow-y: auto;
+    flex-direction: column;
+  }
+  
+  

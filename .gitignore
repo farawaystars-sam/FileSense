@@ -112,3 +112,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+
+# for electronjs and node js
+
+# Node.js dependencies
+node_modules/
+electron/node_modules/
+package-lock.json
+
+# Electron build cache
+*.log
+.DS_Store
