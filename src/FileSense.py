@@ -30,6 +30,12 @@ def filesense(input_path, output_path=os.path.join(".", TEMP_DIR)):
         os.makedirs(output_folder, exist_ok=True)
 
         grouped_files = analyse_content(input_folder)
+
+
+        assert grouped_files, "the groupedfiles is empty"
+        assert type(grouped_files) == dict, "the groupedfiles is not a dict"
+
+        print(grouped_files)
         dir_structure = {}
 
         # Reorganize files into labeled folders
@@ -38,6 +44,7 @@ def filesense(input_path, output_path=os.path.join(".", TEMP_DIR)):
             os.makedirs(label_dir, exist_ok=True)
             
             dir_structure[label] = []
+        assert dir_structure, "the dir_structure is empty"
         return dir_structure
     except Exception as e:
         print(f"Error: {e}")
