@@ -1,0 +1,309 @@
+/* Apply the overall background color */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #F2F2F2;  /* Off-White */
+    color: #333333;  /* Charcoal Grey */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+  
+  .container {
+    text-align: center;
+    padding: 20px;
+    background-color: #FFFFFF;  /* White Background for contrast */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 80%;
+    max-width: 500px;
+  }
+  
+  h1 {
+    color: #333333;  /* Charcoal Grey */
+  }
+  
+  .description {
+    color: #666666;  /* Slightly darker Charcoal Grey for readability */
+    font-size: 1.1em;
+    margin: 15px 0;
+  }
+  
+  button {
+    background-color: #000000;  /* Black */
+    color: #FFFFFF;  /* White Text */
+    border: none;
+    padding: 12px 25px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  
+  button:hover {
+    background-color: #333333;  /* Charcoal Grey for Hover */
+  }
+
+/* Top Bar Styling */
+.top-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #333333;  /* Charcoal Grey */
+    padding: 15px;
+    width: 100%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+  
+  /* Input Box */
+  #inputBox {
+    flex: 1;  /* Fills available space */
+    max-width: 300px;
+    padding: 10px;
+    border: 1px solid #CCCCCC;  /* Grey Border */
+    border-radius: 5px;
+    margin-right: 10px;
+    font-size: 16px;
+  }
+  
+  /* Process Button */
+  #processButton {
+    background-color: #000000;  /* Black */
+    color: #FFFFFF;  /* White Text */
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+  }
+  
+  #processButton:hover {
+    background-color: #333333;  /* Charcoal Grey for Hover */
+  }
+  
+  /* Adjust container to account for fixed top bar */
+  .container {
+    margin-top: 80px;  /* Push content below the top bar */
+  }
+  
+  /* Main content layout - Panels A, B, C */
+.main-content {
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 80px); /* Full height minus the top bar */
+    padding: 20px;
+    box-sizing: border-box;
+    gap: 10px; /* Space between panels */
+  }
+  
+  /* Panel Base Styling */
+  .panel {
+    flex: 1; /* Make all panels equal width */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #FFFFFF;  /* White text for contrast */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Individual Panel Colors */
+  .panel-a {
+    background-color: #333333;  /* Charcoal Grey */
+  }
+  
+  .panel-b {
+    background-color: #F2F2F2;  /* Off-White */
+    color: #333333;  /* Charcoal Grey text */
+  }
+  
+  .panel-c {
+    background-color: #000000;  /* Black */
+    flex-direction: column;
+    position: relative; /* Needed for positioning the logo container */
+  }
+  
+  /* Logo Container in Panel C */
+  .logo-container {
+    position: absolute;
+    top: 10%; /* Positioning 40% from the top */
+    text-align: center;
+    width: 100%;
+  }
+  
+  /* Logo Image */
+  .logo {
+    max-width: 100px; /* Adjust size as needed */
+    height: auto;
+    margin-bottom: 10px;
+  }
+  
+  /* Project Text */
+  .project-text {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333333;  /* Charcoal Grey */
+  }
+  
+/* Panel A Styling */
+.panel-a {
+    background-color: #333333;  /* Charcoal Grey */
+    color: #FFFFFF;  /* White text for contrast */
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    overflow-y: auto; /* Allow scrolling for long trees */
+  }
+  
+  /* Tree Container */
+  .tree-container {
+    width: 100%;
+  }
+  
+  /* Tree View Styling */
+  ul {
+    list-style-type: none;
+    padding-left: 20px;
+  }
+  
+  ul li {
+    margin: 5px 0;
+    font-size: 16px;
+    font-weight: normal;
+  }
+  
+  ul li::before {
+    content: "|__";
+    color: #000000;  /* Black */
+    font-weight: bold;
+    margin-right: 5px;
+  }
+  
+/* Styling checkboxes for better appearance */
+.tree-container input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+  }
+  
+  /* Align checkboxes properly with text */
+  .tree-container li {
+    display: flex;
+    align-items: center;
+  }
+ 
+/* Panel A Styling Update */
+.panel-a {
+    background-color: #333333;  /* Charcoal Grey */
+    color: #FFFFFF;  /* White text for contrast */
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    overflow-y: auto; /* Allow scrolling for long trees */
+    flex-direction: column;
+  }
+  
+  /* Tile Container */
+  .tile {
+    display: flex;
+    align-items: center;
+    background-color: #000000; /* Black */
+    color: #FFFFFF; /* White Text */
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin: 5px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s;
+    cursor: pointer;
+  }
+  
+  .tile:hover {
+    transform: translateY(-2px);
+  }
+  
+  /* Checkbox alignment inside tiles */
+  .tile input[type="checkbox"] {
+    margin-right: 10px;
+    cursor: pointer;
+  }
+  
+  /* Sub-items (Indented Tiles) */
+  .sub-tile {
+    background-color: #F2F2F2; /* Off-White */
+    color: #333333;
+    margin-left: 20px; /* Indent sub-items */
+  }
+
+  /* Panel B Styling - Similar to Panel A */
+.panel-b {
+    background-color: #F2F2F2; /* Off-White */
+    color: #333333; /* Charcoal Grey Text */
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    overflow-y: auto;
+    flex-direction: column;
+  }
+  
+  .panel-b-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 10px;
+    background-color: #F2F2F2; /* Off-White */
+    /*border-top: 2px solid #000000; /* Black */
+}
+
+.panel-b-footer button {
+    padding: 8px 16px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    color: #ffffff; /* White Text */
+    border-radius: 5px;
+}
+
+#acceptBtn {
+    background-color: #82a927; /* Black now green */
+}
+
+#rejectBtn {
+    background-color: #cc0000; /* Red */
+}
+
+.panel-b-footer button:hover {
+    opacity: 0.8;
+}
+
+/* Footer Section */
+.main-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background-color: #333333; /* Charcoal Grey */
+    color: #000000; /* Black */
+    text-align: center;
+    padding: 10px;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.main-footer a {
+    color: #F2F2F2; /* Off-White */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.main-footer a:hover {
+    color: #000000; /* Black */
+}
