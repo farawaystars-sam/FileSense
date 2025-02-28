@@ -1,20 +1,46 @@
-document.getElementById('processButton').addEventListener('click', () => {
-  const inputText = document.getElementById('inputBox').value.trim();
+// For reading the version num for the footer section
+const { ipcRenderer } = require("electron");
 
-  try {
-    if (!inputText) {
-      alert("Please enter a valid input.");  // Validation check
-      return;
-    }
-    
-    // Simulate processing the input (Replace with actual logic if needed)
-    alert("Processing: " + inputText);
+// Request project version from main process
+ipcRenderer.send("get-app-version");
 
-  } catch (error) {
-    console.error("An error occurred:", error);  // Error logging
-    alert("Something went wrong. Please try again.");
+// Receive and display the project version
+ipcRenderer.on("app-version", (event, version) => {
+    document.getElementById("projectVersion").textContent = `Version: ${version}`;
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const processButton = document.getElementById("processButton");
+  
+  if (processButton) {
+      processButton.addEventListener("click", async () => {
+          try {
+              const inputBox = document.getElementById("inputBox").value.trim();
+              if (!inputBox) {
+                  alert("Please enter a valid input before processing.");
+                  return;
+              }
+
+              console.log("🔄 Sending input to backend:", inputBox);
+
+              const response = await fetch("http://127.0.0.1:5000/process", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ user_input: inputBox }),
+              });
+
+              const result = await response.json();
+              console.log("✅ Response from backend:", result);
+              alert("Received from backend: " + result.response);
+
+          } catch (error) {
+              console.error("❌ Error communicating with backend:", error);
+              alert("Error processing input. Please check the backend server.");
+          }
+      });
   }
 });
+
 
 
 // Placeholder JSON data for panel 'A'
@@ -212,13 +238,3 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-// For reading the version num for the footer section
-const { ipcRenderer } = require("electron");
-
-// Request project version from main process
-ipcRenderer.send("get-app-version");
-
-// Receive and display the project version
-ipcRenderer.on("app-version", (event, version) => {
-    document.getElementById("projectVersion").textContent = `Version: ${version}`;
-});
