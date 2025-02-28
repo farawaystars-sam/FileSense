@@ -1,13 +1,56 @@
 // For reading the version num for the footer section
-const { ipcRenderer } = require("electron");
+// var remote = require('remote'); // Load remote compnent that contains the dialog dependency
+// var dialog = remote.require('dialog'); // Load the dialogs component of the OS
+// var fs = require('fs'); // Load the File System to execute our common tasks (CRUD)
 
 // Request project version from main process
-ipcRenderer.send("get-app-version");
+// ipcRenderer.send("get-app-version");
 
 // Receive and display the project version
-ipcRenderer.on("app-version", (event, version) => {
-    document.getElementById("projectVersion").textContent = `Version: ${version}`;
-});
+// ipcRenderer.on("app-version", (event, version) => {
+//     document.getElementById("projectVersion").textContent = `Version: ${version}`;
+// });
+
+// dialog.showOpenDialog({
+//     title:"Select a folder",
+//     properties: ["openDirectory"]
+// }, (folderPaths) => {
+//     // folderPaths is an array that contains all the selected paths
+//     if(fileNames === undefined){
+//         console.log("No destination folder selected");
+//         return;
+//     }else{
+//         console.log(folderPaths);
+//     }
+// });
+
+// renderer.js
+//const { ipcRenderer } = require('electron'); // Import ipcRenderer
+
+// // Get the button element
+// const selectPathButton = document.getElementById('selectPath');
+
+// // Add click event listener to the button
+// selectPathButton.addEventListener('click', () => {
+//     // Send a request to the main process to open the dialog
+//     ipcRenderer.invoke('select-folder').then(folderPath => {
+//         if (folderPath) {
+//             console.log('Selected folder path:', folderPath); // Print the absolute path to the console
+//         } else {
+//             console.log('No folder selected');
+//         }
+//     }).catch(err => {
+//         console.error('Error selecting folder:', err);
+//     });
+// });
+
+const btn = document.getElementById('btn')
+const filePathElement = document.getElementById('inputBox')
+
+btn.addEventListener('click', async () => {
+  const filePath = await window.electronAPI.openFile()
+  filePathElement.value = filePath
+})
 
 document.addEventListener("DOMContentLoaded", () => {
   const processButton = document.getElementById("processButton");
