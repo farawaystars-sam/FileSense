@@ -48,7 +48,19 @@ async function handleFileOpen () {
   if (!canceled) {
     return filePaths[0]
   }
+  else{
+    return null
+  }
 }
+async function do_something(inputPath) {
+  return `Processed: ${inputPath.toUpperCase()}`;
+}
+
+ipcMain.handle('process-path', async (event, inputPath) => {
+  const result = await do_something(inputPath);
+  return result;
+});
+
 app.whenReady().then(() => {
   ipcMain.handle('dialog:openFile', handleFileOpen)
   createWindow();

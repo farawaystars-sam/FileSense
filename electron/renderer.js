@@ -11,46 +11,57 @@
 //     document.getElementById("projectVersion").textContent = `Version: ${version}`;
 // });
 
-// dialog.showOpenDialog({
-//     title:"Select a folder",
-//     properties: ["openDirectory"]
-// }, (folderPaths) => {
-//     // folderPaths is an array that contains all the selected paths
-//     if(fileNames === undefined){
-//         console.log("No destination folder selected");
-//         return;
-//     }else{
-//         console.log(folderPaths);
-//     }
-// });
+const browseButton = document.getElementById('btn');
+const filePathElement = document.getElementById('inputBox');
 
-// renderer.js
-//const { ipcRenderer } = require('electron'); // Import ipcRenderer
+document.addEventListener("DOMContentLoaded", async() => {
+    browseButton.addEventListener('click', async () => {
+        const filePath = await window.electronAPI.openFile();
+        filePathElement.value = filePath;    
+    
+        // display the initial file structure.
+        const inputBox = document.getElementById("inputBox").value.trim();
+        console.log("🔄 Sending input to backend for init struct:", inputBox);
 
-// // Get the button element
-// const selectPathButton = document.getElementById('selectPath');
+        const response = await fetch("http://127.0.0.1:5000/browse", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ input_path: inputBox }),
+        });
 
-// // Add click event listener to the button
-// selectPathButton.addEventListener('click', () => {
-//     // Send a request to the main process to open the dialog
-//     ipcRenderer.invoke('select-folder').then(folderPath => {
-//         if (folderPath) {
-//             console.log('Selected folder path:', folderPath); // Print the absolute path to the console
-//         } else {
-//             console.log('No folder selected');
-//         }
-//     }).catch(err => {
-//         console.error('Error selecting folder:', err);
+        // refresing panels a 
+        data_for_a = await response.json();
+        console.log("recived initial file structure {}", data_for_a);
+        const treeViewElement = document.getElementById("treeView");
+    
+        if (treeViewElement) {
+            createTreeView(data_for_a, treeViewElement);
+        }   
+    });
+});
+    
+
+
+document.addEventListener("DOMContentLoaded", async() => {
+    const treeViewElement = document.getElementById("treeView");
+    const file_path = document.getElementById("inputBox").value;
+    
+    if (treeViewElement) {
+        createTreeView(data_for_a, treeViewElement);
+    }
+});
+
+const processButton = document.getElementById("processButton");
+// processButton.addEventListener('click', () => {
+//     const path = document.getElementById('inputBox').value;
+
+//     window.electronAPI.processPath(path).then((result) => {
+//       console.log('Result from main process:', result);
+//     //   alert('Processed result: ' + result);
 //     });
-// });
+//   });
 
-const btn = document.getElementById('btn')
-const filePathElement = document.getElementById('inputBox')
-
-btn.addEventListener('click', async () => {
-  const filePath = await window.electronAPI.openFile()
-  filePathElement.value = filePath
-})
+let result = {};
 
 document.addEventListener("DOMContentLoaded", () => {
   const processButton = document.getElementById("processButton");
@@ -72,9 +83,16 @@ document.addEventListener("DOMContentLoaded", () => {
                   body: JSON.stringify({ user_input: inputBox }),
               });
 
-              const result = await response.json();
-              console.log("✅ Response from backend:", result);
-              alert("Received from backend: " + result.response);
+            result = await response.json();
+            data_for_b = result;
+            const treeViewElementB = document.getElementById("treeViewB");
+                if (treeViewElementB) {
+                    createTreeViewB(data_for_b, treeViewElementB);
+                    console.log("✅ Response in createview:", data_for_b);
+                }
+              
+              console.log("✅ Response from backend:", data_for_b);
+            //   alert("Received from backend: " + result.response);
 
           } catch (error) {
               console.error("❌ Error communicating with backend:", error);
@@ -86,13 +104,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-// Placeholder JSON data for panel 'A'
-const data_for_a = {
-  "label_a": ["label_a/item1", "label_a/item2"],
-  "label_b": ["label_b/item1"],
-  "label_n": []  // Example label with no items
-};
+// // Placeholder JSON data for panel 'A'
+// var data_for_a = {
+//   "label_a": ["label_a/item1", "label_a/item2"],
+//   "label_b": ["label_b/item1"],
+//   "label_n": []  // Example label with no items
+// };
 
+var data_for_a = {};
 // Store checked items
 const checkedItems = new Set();
 
@@ -101,50 +120,117 @@ const checkedItems = new Set();
  * @param {Object} data - The JSON object containing labels and items
  * @param {HTMLElement} parentElement - The parent element to append the tree structure
  */
+// function createTreeView(data, parentElement) {
+//   try {
+//       for (const [label, items] of Object.entries(data)) {
+//           let labelTile = document.createElement("div");
+//           labelTile.classList.add("tile");
+
+//           // Create checkbox for the label
+//           let labelCheckbox = document.createElement("input");
+//           labelCheckbox.type = "checkbox";
+//           labelCheckbox.addEventListener("change", () => toggleChecked(label, labelCheckbox.checked));
+
+//           let labelText = document.createElement("span");
+//           labelText.textContent = label;
+
+//           labelTile.appendChild(labelCheckbox);
+//           labelTile.appendChild(labelText);
+//           parentElement.appendChild(labelTile);
+
+//           if (items.length > 0) {
+//               let subList = document.createElement("div");
+//               items.forEach(item => {
+//                   let itemTile = document.createElement("div");
+//                   itemTile.classList.add("tile", "sub-tile");
+
+//                   // Create checkbox for each item
+//                   let itemCheckbox = document.createElement("input");
+//                   itemCheckbox.type = "checkbox";
+//                   itemCheckbox.addEventListener("change", () => toggleChecked(item, itemCheckbox.checked));
+
+//                   let itemText = document.createElement("span");
+//                   itemText.textContent = item.split("/")[1];  // Display only item name
+
+//                   itemTile.appendChild(itemCheckbox);
+//                   itemTile.appendChild(itemText);
+//                   subList.appendChild(itemTile);
+//               });
+//               parentElement.appendChild(subList);
+//           }
+//       }
+//   } catch (error) {
+//       console.error("Error generating tree view:", error);
+//       alert("An error occurred while loading the data.");
+//   }
+// }
+
 function createTreeView(data, parentElement) {
-  try {
-      for (const [label, items] of Object.entries(data)) {
-          let labelTile = document.createElement("div");
-          labelTile.classList.add("tile");
+    try {
+        for (const [label, items] of Object.entries(data)) {
+            if (label === ".") {
+                items.forEach(item => {
+                    let itemTile = document.createElement("div");
+                    itemTile.classList.add("tile", "sub-tile");
 
-          // Create checkbox for the label
-          let labelCheckbox = document.createElement("input");
-          labelCheckbox.type = "checkbox";
-          labelCheckbox.addEventListener("change", () => toggleChecked(label, labelCheckbox.checked));
+                    let itemCheckbox = document.createElement("input");
+                    itemCheckbox.type = "checkbox";
+                    itemCheckbox.addEventListener("change", () => toggleChecked(item, itemCheckbox.checked));
 
-          let labelText = document.createElement("span");
-          labelText.textContent = label;
+                    let itemText = document.createElement("span");
+                    itemText.textContent = item.split("/").pop();  // Display only item name
 
-          labelTile.appendChild(labelCheckbox);
-          labelTile.appendChild(labelText);
-          parentElement.appendChild(labelTile);
+                    itemTile.appendChild(itemCheckbox);
+                    itemTile.appendChild(itemText);
+                    parentElement.appendChild(itemTile);
+                });
+            } else {
+                let labelTile = document.createElement("div");
+                labelTile.classList.add("tile");
 
-          if (items.length > 0) {
-              let subList = document.createElement("div");
-              items.forEach(item => {
-                  let itemTile = document.createElement("div");
-                  itemTile.classList.add("tile", "sub-tile");
+                // Create checkbox for the label
+                let labelCheckbox = document.createElement("input");
+                labelCheckbox.type = "checkbox";
+                labelCheckbox.addEventListener("change", () => toggleChecked(label, labelCheckbox.checked));
 
-                  // Create checkbox for each item
-                  let itemCheckbox = document.createElement("input");
-                  itemCheckbox.type = "checkbox";
-                  itemCheckbox.addEventListener("change", () => toggleChecked(item, itemCheckbox.checked));
+                let labelText = document.createElement("span");
+                labelText.textContent = label;
 
-                  let itemText = document.createElement("span");
-                  itemText.textContent = item.split("/")[1];  // Display only item name
+                labelTile.appendChild(labelCheckbox);
+                labelTile.appendChild(labelText);
+                parentElement.appendChild(labelTile);
 
-                  itemTile.appendChild(itemCheckbox);
-                  itemTile.appendChild(itemText);
-                  subList.appendChild(itemTile);
-              });
-              parentElement.appendChild(subList);
-          }
-      }
-  } catch (error) {
-      console.error("Error generating tree view:", error);
-      alert("An error occurred while loading the data.");
-  }
+                if (items.length > 0) {
+                    let subList = document.createElement("div");
+                    subList.classList.add("sub-tile-list");
+
+                    items.forEach(item => {
+                        let itemTile = document.createElement("div");
+                        itemTile.classList.add("tile", "sub-tile");
+
+                        // Create checkbox for each item
+                        let itemCheckbox = document.createElement("input");
+                        itemCheckbox.type = "checkbox";
+                        itemCheckbox.addEventListener("change", () => toggleChecked(item, itemCheckbox.checked));
+
+                        let itemText = document.createElement("span");
+                        itemText.textContent = item.split("/").pop();  // Display only item name
+
+                        itemTile.appendChild(itemCheckbox);
+                        itemTile.appendChild(itemText);
+                        subList.appendChild(itemTile);
+                    });
+                    parentElement.appendChild(subList);
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error generating tree view:", error);
+        alert("An error occurred while loading the data.");
+    }
 }
+
+
 
 /**
  * Function to track checked items and print to console
@@ -169,12 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // Placeholder JSON data for Panel B
-const data_for_b = {
-  "category_x": ["category_x/item1", "category_x/item2"],
-  "category_y": ["category_y/item1"],
-  "category_z": []
-};
-
+var data_for_b = {};
 // Store checked items separately for Panel B
 const checkedItemsB = new Set();
 
@@ -221,12 +302,37 @@ function createTreeViewB(data, parentElement) {
               });
               parentElement.appendChild(subList);
           }
+
       }
   } catch (error) {
       console.error("Error generating tree view for Panel B:", error);
       alert("An error occurred while loading the data for Panel B.");
   }
 }
+
+function addPanelFooter(parentElement) {
+    // Create the panel-b-footer div
+    let panelFooter = document.createElement("div");
+    panelFooter.classList.add("panel-b-footer");
+
+    // Create the Accept button
+    let acceptBtn = document.createElement("button");
+    acceptBtn.id = "acceptBtn";
+    acceptBtn.textContent = "Accept";
+
+    // Create the Reject button
+    let rejectBtn = document.createElement("button");
+    rejectBtn.id = "rejectBtn";
+    rejectBtn.textContent = "Reject";
+
+    // Append buttons to the panel-b-footer div
+    panelFooter.appendChild(acceptBtn);
+    panelFooter.appendChild(rejectBtn);
+
+    // Append the panel-b-footer div to the parent element
+    parentElement.appendChild(panelFooter);
+}
+
 
 /**
 * Function to track checked items in Panel B and print to console
@@ -243,19 +349,21 @@ function toggleCheckedB(item, isChecked) {
 }
 
 // Initialize the tree in Panel B
-document.addEventListener("DOMContentLoaded", () => {
-  const treeViewElementB = document.getElementById("treeViewB");
-  if (treeViewElementB) {
-      createTreeViewB(data_for_b, treeViewElementB);
-  }
-});
+
 
 // Function to handle "Accept" button click
-function onAcceptClick() {
+async function onAcceptClick() {
   try {
       console.log("✅ Accept button clicked.");
-      alert("Action Accepted!");
+    //   alert("Action Accepted!");
       // TODO: Add logic for processing accepted items
+      console.log("making changes:");
+      const status = await fetch("http://127.0.0.1:5000/accept-changes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ structure: data_for_b }),
+      });
+      console.log("Status:", await status.json)
   } catch (error) {
       console.error("Error handling Accept button:", error);
       alert("An error occurred while processing Accept.");

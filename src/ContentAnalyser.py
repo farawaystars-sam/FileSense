@@ -118,7 +118,7 @@ def group_files_by_label(base_dir):
         if label not in grouped_files:
             grouped_files[label] = []
         
-        grouped_files[label].append(os.path.join(label, os.path.basename(file)))
+        grouped_files[label].append((file, os.path.join(label, os.path.basename(file))))
         
         assert grouped_files, "The grouped_files is empty: check the above code"
     return grouped_files

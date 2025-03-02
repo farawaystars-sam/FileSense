@@ -4,49 +4,55 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FileSense v.1.0.0</title>
+  
+  <link rel=”stylesheet” href=”https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css”>
   <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <!-- Top Bar with Input and Button -->
-    <div class="top-bar">
-      <input type="text" id="inputBox" placeholder="Enter input">
-      <button type="button" id="btn">Open a File</button>
-      <button id="processButton">Process</button>
-    </div>
-  
-    <!-- Main Content Area with Three Panels -->
-<div class="main-content">
-    <!-- Panel A - JSON Hierarchical Tree -->
-<div class="panel panel-a">
-    <div class="tree-container">
-      <ul id="treeView"></ul>
-    </div>
-  </div>
-  
-   <!-- Panel B - JSON Hierarchical Tree (Similar to Panel A) -->
-<div class="panel panel-b">
-    <div class="tree-container">
-      <ul id="treeViewB"></ul>
-    </div>
-
-    <!-- Add this inside Panel B's container, at the bottom -->
-    <div class="panel-b-footer">
-        <button id="acceptBtn">Accept</button>
-        <button id="rejectBtn">Reject</button>
-    </div>
-
-  </div>
-  
-  
-    <!-- Panel C -->
-    <div class="panel panel-c">
-      <div class="logo-container">
-        <img src="./logo.png" alt="Project Logo" class="logo">
-        <p class="project-text">An AI powered files reorganization tool that just makes sense!</p>
+  </head>
+  <body>
+    <div class="container">
+        <!-- Top Bar with Input and Button -->
+        <div class="top-bar">
+          <input type="text" id="inputBox" placeholder="Enter input">
+          <button id="btn" class="buttonUpload"> O
+            <i class="fa-solid fa-folder-open"></i>
+          </button>
+          <button id="processButton">Process</button>
+        </div>
+      
+        <!-- Main Content Area with Three Panels -->
+    <div class="main-content">
+        <!-- Panel A - JSON Hierarchical Tree -->
+    <div class="panel panel-a">
+        <div class="tree-container">
+          <ul id="treeView"></ul>
+        </div>
       </div>
+      
+      <!-- Panel B - JSON Hierarchical Tree (Similar to Panel A) -->
+    <div class="panel panel-b">
+        <div class="tree-container">
+          <ul id="treeViewB"></ul>
+        </div>
+
+        <!-- Add this inside Panel B's container, at the bottom -->
+        <div class="panel-b-footer">
+            <button id="acceptBtn">Accept</button>
+            <button id="rejectBtn">Reject</button>
+        </div>
+
+      </div>
+      
+      
+        <!-- Panel C -->
+        <div class="panel panel-c">
+          <div class="logo-container">
+            <img src="./logo.png" alt="Project Logo" class="logo">
+            <p class="project-text">An AI powered files reorganization tool that just makes sense!</p>
+          </div>
+        </div>
+      </div>
+      <script src="renderer.js"></script>
     </div>
-  </div>
-  <script src="renderer.js"></script>
   </body>
   <!-- Footer Section -->
 <footer class="main-footer">

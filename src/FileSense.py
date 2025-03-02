@@ -20,7 +20,7 @@ def filesense(input_path, output_path=os.path.join(".", TEMP_DIR)):
         - output_path: str or os.path: the destination folder, give a default or temp value of './temp'
 
         return:
-        - dir_structure: dict: a dict of format kvp = (dir, dir/file) 
+        - dir_structure: dict: a dict of format kvp = (dir, (init_path, new dir/file)) 
 
 
     """
@@ -38,14 +38,14 @@ def filesense(input_path, output_path=os.path.join(".", TEMP_DIR)):
         print(grouped_files)
         dir_structure = {}
 
-        # Reorganize files into labeled folders
-        for label, files in grouped_files.items():
-            label_dir = os.path.join(output_folder, label)
-            os.makedirs(label_dir, exist_ok=True)
+        # # Reorganize files into labeled folders
+        # for label, files in grouped_files.items():
+        #     label_dir = os.path.join(output_folder, label)
+        #     os.makedirs(label_dir, exist_ok=True)
             
-            dir_structure[label] = []
-        assert dir_structure, "the dir_structure is empty"
-        return dir_structure
+        #     dir_structure[label] = []
+        # assert dir_structure, "the dir_structure is empty"
+        return grouped_files
     except Exception as e:
         print(f"Error: {e}")
 
@@ -84,21 +84,23 @@ def main():
 
         dry_run = not args.force
         grouped_files = analyse_content(input_folder)
+        if __debug__:
+            print("struuct>>>" ,grouped_files)
 
         # Reorganize files into labeled folders
         for label, files in grouped_files.items():
             label_dir = os.path.join(output_folder, label)
             os.makedirs(label_dir, exist_ok=True)
         
-            for file_path in files:
+            for initial_path, file_path in files:
                 if dry_run:
-                    user_input = input(f"Move {file_path} to {label_dir}? (y/n): ")
+                    user_input = input(f"Move {initial_path}: {file_path} to {label_dir}? (y/n): ")
                     if user_input.lower() != 'y' or user_input.lower() != 'Y':
                         print(f"[-]  Skipping file .{file_path[label:]}....")
                         continue  # Skip this file if the user doesn't accept the change
                         
-                shutil.copy(file_path, label_dir)
-                print(f"Moved {file_path} to {label_dir}")
+                shutil.copy(initial_path, label_dir)
+                print(f"Moved {initial_path} to {label_dir}")
 
         print("Reorganization completed!")
     except Exception as e:

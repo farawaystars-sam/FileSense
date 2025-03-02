@@ -1,4 +1,4 @@
-# from src.FileSense import filesense
+from src.FileSense import filesense
 
 # if __name__ == "__main__":
 #     input_path = "/home/samadiga/Exp/FilseSense v.1.0.0/Data"
@@ -19,9 +19,11 @@ def process_input():
         user_input = data.get("user_input", "")
 
         print(f"🖥️ Received input: {user_input}")
-        d = {'user_input': user_input, "response": 1234 }        
+        # calling filesense function
+        retured_structure = filesense(user_input)
+        # d = {'user_input': user_input, "response": 1234 }        
 
-        return jsonify(d)
+        return jsonify(retured_structure)
     except Exception as e:
         print(f"❌ Error in processing: {e}")
         return jsonify({"error": "Server error"}), 500
