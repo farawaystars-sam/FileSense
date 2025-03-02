@@ -8,6 +8,7 @@ from FileSense import filesense
 from flask import Flask, request, jsonify
 from flask_cors import CORS  # Allow cross-origin requests (from Electron app)
 import os
+import shutil
 
 TEMP_DIR = "tmp"
 GROUPED_FILES = {}
@@ -78,19 +79,51 @@ def accept_changes():
             raise Exception("Invalid request from json")
         # cqll implement 
         print(f"Grouped in accept chnages: {GROUPED_FILES}")
-        implement_changes(GROUPED_FILES)
-        return jsonify({"message": "Changes implemented successfully"})
+        success = implement_changes(GROUPED_FILES)
+        return jsonify({"status": f"Changes implemented successfully {success}"})
     except Exception as e:
         print(f"Error in making changes {e}")
         return jsonify({"error": f"Server error{e}"}), 500
     
 def implement_changes(dir_struct, output_path=os.path.join(".", TEMP_DIR)):
-    print(f"call to implement changes { GROUPED_FILES}")
-    for key, value in dir_struct.items():
-        for initial_path, prop_file in value:
-            print(f" {key}: {initial_path} -> {prop_file}")
+    try:    
+        print(f"call to implement changes { GROUPED_FILES}")
+        for key, value in dir_struct.items():
+            label_dir = os.path.join(output_path, key)
+            if __debug__:
+                print("label_dir: ", label_dir)
+            os.makedirs(label_dir, exist_ok=True)
+            for initial_path, prop_file in value:
+                if __debug__:
+                    print(f" {key}: {initial_path} -> {prop_file}")
+                shutil.copy(initial_path, label_dir)
+                print(f"Moved {initial_path} to {label_dir}")
+        return True
+    except Exception as e:
+        print(f"Error in implementing changes: {e}")
+        return False
+@app.route("/reject-changes", methods=['POST'])    
+def reject_changes():
+    try:
+        data = request.json
+        mes = data.get("message", "")
+        if not mes:
+            raise Exception("Invalid request from json")
+        # call undo 
+        success = undo_changes()
+        return jsonify({"status": f"Changes rejected successfully {success}"})
+    except Exception as e:
+        print(f"Error in making changes {e}")
+        return jsonify({"error": f"Server error{e}"}), 500
+    
+def undo_changes(output_path=os.path.join(".", TEMP_DIR)):
+    try:    
+        os.removedirs(output_path)
+        return True
+    except Exception as e:
+        print(f"Error in rejecting changes: {e}")
+        return False
 
-    return True
 
 if __name__ == "__main__":
     app.run(debug=True)

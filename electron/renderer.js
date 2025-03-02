@@ -363,7 +363,7 @@ async function onAcceptClick() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ structure: data_for_b }),
       });
-      console.log("Status:", await status.json)
+      console.log("Status:", status.json)
   } catch (error) {
       console.error("Error handling Accept button:", error);
       alert("An error occurred while processing Accept.");
@@ -371,12 +371,20 @@ async function onAcceptClick() {
 }
 
 // Function to handle "Reject" button click
-function onRejectClick() {
+async function onRejectClick() {
   try {
-      console.log("❌ Reject button clicked.");
-      alert("Action Rejected!");
-      // TODO: Add logic for handling rejection
-  } catch (error) {
+    console.log("✅ Reject button clicked.");
+  //   alert("Action Accepted!");
+    // TODO: Add logic for processing accepted items
+    console.log("making changes:");
+    const status = await fetch("http://127.0.0.1:5000/reject-changes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({message: "Reject changes"}),
+    });
+    message = await status.json();
+    console.log("Status message:", message)
+} catch (error) {
       console.error("Error handling Reject button:", error);
       alert("An error occurred while processing Reject.");
   }
