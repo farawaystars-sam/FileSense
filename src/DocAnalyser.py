@@ -4,6 +4,7 @@ from nltk.corpus import stopwords  # Stopwords for NLP tasks
 from nltk.tokenize import word_tokenize  # Tokenization of text
 import re  # Regular expressions for text processing
 import fitz  # PyMuPDF library for extracting text from PDFs
+import os
 
 
 # Global declarations
@@ -14,6 +15,28 @@ classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnl
 nltk.download('punkt')
 nltk.download('stopwords')
 
+document_folders = [
+    "Documents",
+    "Reports",
+    "Presentations",
+    "Contracts",
+    "Invoices",
+    "Proposals",
+    "Meeting Notes",
+    "Research",
+    "Templates",
+    "To Do",
+    "Personal",
+    "Finance",
+    "Client Files",
+    "Policies",
+    "Correspondence",
+    "Legal",
+    "Manuals",
+    "Notes",
+    "Archives",
+    "Work"
+]
 
 def extract_text_from_pdf(pdf_path):
     """
@@ -34,6 +57,33 @@ def extract_text_from_pdf(pdf_path):
         print(f"Error extracting text from PDF: {e}")
     return text
 
+def convert_to_text(file_path):
+    """
+    Converts a DOC or DOCX file to plain text and assigns it to a variable.
+    
+    :param file_path: Path to the input DOC or DOCX file
+    :return: Text content of the file
+    """
+    _, file_extension = os.path.splitext(file_path)
+    text = ""
+
+    if file_extension.lower() == '.docx':
+        # Handle DOCX files
+        doc = docx.Document(file_path)
+        for para in doc.paragraphs:
+            text += para.text + '\n'
+
+    elif file_extension.lower() == '.doc':
+        # Handle DOC files
+        doc = fitz.open(file_path)
+        for page_num in range(doc.page_count):
+            page = doc.load_page(page_num)
+            text += page.get_text("text")
+    
+    else:
+        raise ValueError("Unsupported file format. Please provide a DOC or DOCX file.")
+
+    return text
 
 def classify_document(file_path):
     """
@@ -49,13 +99,14 @@ def classify_document(file_path):
         # Extract text based on file type
         if file_path.lower().endswith('.pdf'):
             text = extract_text_from_pdf(file_path)
+        elif file_path.lower().endswith(('.doc', '.docx')):
+            text = convert_to_text(file_path)
         else:
             with open(file_path, "r", encoding="utf-8") as f:
                 text = f.read()
         
         # Define candidate labels (you can modify these as needed)
-        candidate_labels = ["technology", "finance", "legal", "contracts", "vegetations", "communication"]
-
+        candidate_labels = document_folders
         
         # Clean and classify the text
         clean_text = re.sub(r'\s+', ' ', text.strip())
