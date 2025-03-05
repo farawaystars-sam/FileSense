@@ -3,6 +3,7 @@ import os  # For interacting with the operating system (file handling, paths)
 import shutil  # For file operations like copying and moving files
 from PathValidator import validate_path     # For validating path
 from ContentAnalyser import analyse_content # A high level function for analysing content
+import time
 
 # version
 __version__ = "0.1.0"
@@ -29,8 +30,10 @@ def filesense(input_path, output_path=os.path.join(".", TEMP_DIR)):
         output_folder = output_path
         os.makedirs(output_folder, exist_ok=True)
 
-        grouped_files = analyse_content(input_folder)
-
+        start = time.perf_counter()
+        grouped_files, perf_data = analyse_content(input_folder)
+        time_taken = time.perf_counter() - start
+        perf_data["time_taken(s)"] = time_taken
 
         assert grouped_files, "the groupedfiles is empty"
         assert type(grouped_files) == dict, "the groupedfiles is not a dict"
@@ -45,7 +48,7 @@ def filesense(input_path, output_path=os.path.join(".", TEMP_DIR)):
             
         #     dir_structure[label] = []
         # assert dir_structure, "the dir_structure is empty"
-        return grouped_files
+        return grouped_files, perf_data
     except Exception as e:
         print(f"Error: {e}")
 

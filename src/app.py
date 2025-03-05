@@ -9,16 +9,19 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS  # Allow cross-origin requests (from Electron app)
 import os
 import shutil
+import pandas as pd
+
 
 TEMP_DIR = "tmp"
 GROUPED_FILES = {}
+PERF_DATA = {}
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for cross-domain requests
 
 def get_dir_structure(dir_path):
     dir_structure = {}
-    
+
     for root, _, files in os.walk(dir_path):
         relative_root = os.path.relpath(root, dir_path)
         if relative_root == ".":
@@ -27,6 +30,17 @@ def get_dir_structure(dir_path):
             dir_structure[relative_root] = [os.path.join(relative_root, f) for f in files]
     
     return dir_structure
+
+def write_data_to_csv(file_name, data):
+# Writing to a csv 
+    df = pd.DataFrame(data)
+    csv_file = "analytics.csv"
+    # Check if the file exists
+    file_exists = os.path.isfile(csv_file)
+    # Write or append data based on file existence
+    df.to_csv(csv_file, 
+                mode='a' if file_exists else 'w', 
+                index=False, header=not file_exists)   
 
 @app.route("/browse", methods=["POST"])
 def send_initial_struct():
@@ -51,7 +65,8 @@ def process_input():
 
         print(f"🖥️ Received input: {user_input}")
         # calling filesense function
-        retured_structure = filesense(user_input)
+        global PERF_DATA
+        retured_structure, PERF_DATA = filesense(user_input)
         global GROUPED_FILES 
         GROUPED_FILES = retured_structure
         print(f"Grouped files :{GROUPED_FILES}")
@@ -73,6 +88,8 @@ def process_input():
 @app.route("/accept-changes", methods=['POST'])    
 def accept_changes():
     try:
+        #implicit positive rating: 1
+        PERF_DATA["rating"] = 1
         data = request.json
         dir_s = data.get("structure", "")
         if not dir_s:
@@ -80,6 +97,8 @@ def accept_changes():
         # cqll implement 
         print(f"Grouped in accept chnages: {GROUPED_FILES}")
         success = implement_changes(GROUPED_FILES)
+        # write analytics data to csv
+        write_data_to_csv('my_file.csv', PERF_DATA)
         return jsonify({"status": f"Changes implemented successfully {success}"})
     except Exception as e:
         print(f"Error in making changes {e}")
@@ -105,12 +124,16 @@ def implement_changes(dir_struct, output_path=os.path.join(".", TEMP_DIR)):
 @app.route("/reject-changes", methods=['POST'])    
 def reject_changes():
     try:
+        #implicit positive rating: 0
+        PERF_DATA["rating"] = 0
         data = request.json
         mes = data.get("message", "")
         if not mes:
             raise Exception("Invalid request from json")
         # call undo 
         success = undo_changes()
+         # write analytics data to csv
+        write_data_to_csv('my_file.csv', PERF_DATA)
         return jsonify({"status": f"Changes rejected successfully {success}"})
     except Exception as e:
         print(f"Error in making changes {e}")

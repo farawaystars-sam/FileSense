@@ -86,7 +86,6 @@ def analyse_content(input_path):
 
 def get_all_files(base_dir):
     file_list = []
-    
     for root, _, files in os.walk(base_dir):
         for file in files:
             absolute_path = os.path.join(root, file)
@@ -102,23 +101,42 @@ def doc_func(file_path):
 
 def group_files_by_label(base_dir):
     files = get_all_files(base_dir)
+    N = len(files)
     grouped_files = {}
-    
+    image_size, img_num = 0, 0
+    doc_size, doc_num = 0, 0
+    uncat_size, uncat_num = 0, 0
     for file in files:
         ext = os.path.splitext(file)[1].lower()
         if ext in IMAGE_EXTENSIONS:
+            image_size += os.path.getsize()
+            img_num += 1
             label = img_func(file)
         elif ext in DOCUMENT_EXTENSIONS:
+            doc_size += os.path.getsize()
+            doc_num += 1
             label = doc_func(file)
         else:
+            doc_size += os.path.getsize()
+            doc_num += 1
             continue
 
         assert label is not None, "The dir label is None: check the classifier"
         
+        perf_data = {
+            "total_files": N,
+            "#image_files": img_num,
+            "image_size(B)": image_size,
+            "#document_files": doc_num,
+            "document_size(B)": doc_size,
+            "#unclassified_files": uncat_num,
+            "unclassified_size(B)": uncat_size
+        }
+
         if label not in grouped_files:
             grouped_files[label] = []
         
         grouped_files[label].append((file, os.path.join(label, os.path.basename(file))))
         
         assert grouped_files, "The grouped_files is empty: check the above code"
-    return grouped_files
+    return grouped_files, perf_data
