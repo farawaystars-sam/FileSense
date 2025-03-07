@@ -31,10 +31,11 @@ def get_dir_structure(dir_path):
     
     return dir_structure
 
-def write_data_to_csv(file_name, data):
-# Writing to a csv 
-    df = pd.DataFrame(data)
-    csv_file = "analytics.csv"
+def write_data_to_csv(file_name, data:dict):
+    # Writing to a csv 
+    print(f"DATA: {data}")
+    df = pd.DataFrame(data.values(), index=data.keys()).T
+    csv_file = file_name or "analytics.csv"
     # Check if the file exists
     file_exists = os.path.isfile(csv_file)
     # Write or append data based on file existence

@@ -5,6 +5,7 @@ from nltk.tokenize import word_tokenize  # Tokenization of text
 import re  # Regular expressions for text processing
 import fitz  # PyMuPDF library for extracting text from PDFs
 import os
+import docx  # Python-docx library for DOCX file handling
 
 
 # Global declarations

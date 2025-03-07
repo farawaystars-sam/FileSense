@@ -32,7 +32,7 @@ folder_names = [
     "Before and After"
 ]
 
-def classify_image(file_path, class_labels):
+def classify_image(file_path, class_labels = folder_names):
 
     """Classify an image file using CLIP based on provided class labels."""
     try:

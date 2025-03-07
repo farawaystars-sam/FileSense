@@ -109,16 +109,16 @@ def group_files_by_label(base_dir):
     for file in files:
         ext = os.path.splitext(file)[1].lower()
         if ext in IMAGE_EXTENSIONS:
-            image_size += os.path.getsize()
+            image_size += os.path.getsize(file)
             img_num += 1
             label = img_func(file)
         elif ext in DOCUMENT_EXTENSIONS:
-            doc_size += os.path.getsize()
+            doc_size += os.path.getsize(file)
             doc_num += 1
             label = doc_func(file)
         else:
-            doc_size += os.path.getsize()
-            doc_num += 1
+            uncat_size += os.path.getsize(file)
+            uncat_num += 1
             continue
 
         assert label is not None, "The dir label is None: check the classifier"
