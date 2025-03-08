@@ -1,0 +1,20 @@
+# Core dependencies for file processing
+Pillow>=9.1.0,<10.0.0  # Image processing library
+pytesseract==0.3.10  # OCR for text extraction from images
+pdfplumber==0.10.2  # PDF text extraction
+python-docx==1.0.1  # DOCX file processing
+
+# Data Analysis
+numpy>=1.23.0,<2.0.0  # Required for compatibility
+pandas>=2.0.3,<2.1.0  # Data manipulation and analysis
+
+# Data Visualization (Optional)
+# matplotlib>=3.9.4,<4.0.0  # Plotting library for data visualization
+
+# LLM 
+ollama>=0.1.2,<0.2.0  # Local LLM integration
+
+# Utility and optimization
+tqdm>=4.66.1,<5.0.0  # Progress bars for long operations
+chardet>=5.2.0,<6.0.0  # Character encoding detection
+multiprocess>=0.70.15,<0.71.0  # Enhanced parallel processing

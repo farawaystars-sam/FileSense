@@ -22,5 +22,5 @@ HP = high priority, LP = low priority
 
 Update with DONE. 
 
-## work in progress
-any help appricieted. 
+in windows:
+powershell: Set-ExecutionPolicy RemoteSigned -Scope Process

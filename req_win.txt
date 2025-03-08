@@ -1,0 +1,12 @@
+argparse
+torch
+transformers
+Pillow
+pathlib
+nltk
+regex
+PyMuPDF
+docx
+pandas
+flask
+flask-cors

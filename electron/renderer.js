@@ -294,7 +294,8 @@ function createTreeViewB(data, parentElement) {
                   itemCheckbox.addEventListener("change", () => toggleCheckedB(item, itemCheckbox.checked));
 
                   let itemText = document.createElement("span");
-                  itemText.textContent = item.split("/")[1];  // Display only item name
+                //   itemText.textContent = item.split("/")[1];  // Display only item name
+                  itemText.textContent = item.split("\\")[1];  // Display only item name
 
                   itemTile.appendChild(itemCheckbox);
                   itemTile.appendChild(itemText);

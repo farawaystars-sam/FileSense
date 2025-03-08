@@ -1,23 +1,22 @@
-from FileSense import filesense
-# if __name__ == "__main__":
-#     input_path = "/home/samadiga/Exp/FilseSense v.1.0.0/Data"
-#     retured_structure = filesense(input_path)
-#     assert retured_structure, "The returned structure is empty:in my func"
-#     print(retured_structure)
-
 from flask import Flask, request, jsonify
-from flask_cors import CORS  # Allow cross-origin requests (from Electron app)
+from flask_cors import CORS
+from file_analysis import file_content_analysis
 import os
+import logging
 import shutil
 import pandas as pd
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = Flask(__name__)
+CORS(app)
 
 
 TEMP_DIR = "tmp"
 GROUPED_FILES = {}
 PERF_DATA = {}
-
-app = Flask(__name__)
-CORS(app)  # Enable CORS for cross-domain requests
 
 def get_dir_structure(dir_path):
     dir_structure = {}
@@ -30,6 +29,7 @@ def get_dir_structure(dir_path):
             dir_structure[relative_root] = [os.path.join(relative_root, f) for f in files]
     
     return dir_structure
+
 
 def write_data_to_csv(file_name, data:dict):
     # Writing to a csv 
@@ -58,34 +58,45 @@ def send_initial_struct():
         print(f" while browsing initial struct: {e} occured")
 
 
-@app.route("/process", methods=["POST"])
-def process_input():
+@app.route('/process', methods=['POST'])
+def analyze():
     try:
         data = request.json
-        user_input = data.get("user_input", "")
-
-        print(f"🖥️ Received input: {user_input}")
-        # calling filesense function
-        global PERF_DATA
-        retured_structure, PERF_DATA = filesense(user_input)
-        global GROUPED_FILES 
-        GROUPED_FILES = retured_structure
-        print(f"Grouped files :{GROUPED_FILES}")
-        data_for_b = {}
-        for label, file_tup in retured_structure.items():
-            for ini_p, new_p in file_tup:
-                print( f" in app.py {ini_p} -> {new_p}, {label}")
-                if label not in data_for_b:
-                    data_for_b[label] = []
-                data_for_b[label].append(new_p)        
-
-        print(f"Returned structure: {data_for_b}")      
-
-        return jsonify(data_for_b)
-    except Exception as e:
-        print(f"❌ Error in processing: {e}")
-        return jsonify({"error": "Server error"}), 500
+        dir_path = data.get('directory')
+        
+        logger.info(f"Received request to analyze directory: {dir_path}")
+        
+        if not dir_path or not os.path.isdir(dir_path):
+            logger.error(f"Invalid directory path: {dir_path}")
+            return jsonify({
+                'proposed_struct': {},
+                'errors': f'Invalid directory path: {dir_path}',
+                'spare': 'Please provide a valid directory path'
+            }), 400
+            
+        logger.info("Starting file content analysis...")
+        result = file_content_analysis(dir_path)
+        
+        if not result:
+            logger.error("No valid files found in directory")
+            return jsonify({
+                'proposed_struct': {}
+                # 'errors': 'No valid files found in directory',
+                # 'spare': 'The specified directory is empty or contains no supported files'
+            }), 400
+        
+        logger.info("Analysis completed successfully")
+        return jsonify(result)
     
+    except Exception as e:
+        error_msg = str(e)
+        logger.error(f"Error processing request: {error_msg}")
+        return jsonify({
+            'proposed_struct': {},
+            'errors': f'Server error: {error_msg}',
+            'spare': 'An unexpected error occurred while processing your request'
+        }), 500
+
 @app.route("/accept-changes", methods=['POST'])    
 def accept_changes():
     try:
@@ -122,6 +133,7 @@ def implement_changes(dir_struct, output_path=os.path.join(".", TEMP_DIR)):
     except Exception as e:
         print(f"Error in implementing changes: {e}")
         return False
+
 @app.route("/reject-changes", methods=['POST'])    
 def reject_changes():
     try:
@@ -148,6 +160,14 @@ def undo_changes(output_path=os.path.join(".", TEMP_DIR)):
         print(f"Error in rejecting changes: {e}")
         return False
 
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run()
+    # try:
+    #     # Try port 5000 first, then 5001 if 5000 is busy
+    #     try:
+    #         app.run(port=5000)
+    #     except OSError:
+    #         logger.info("Port 5000 is busy, trying port 5001...")
+    #         app.run(port=5001)
+    # except Exception as e:
+    #     logger.error(f"Failed to start server: {e}")
