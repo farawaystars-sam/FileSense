@@ -1,0 +1,38 @@
+# Core dependencies
+langchain                 # For creating and managing LLM chains
+langchain-community      # For community integrations
+langchain-core          # Core langchain functionality
+langchain-ollama        # For Ollama model integration
+
+# Web Interface
+flask                  # Web framework for UI
+flask-cors            # Cross-origin support for API
+jinja2                # Template engine for UI
+
+# Frontend Dependencies
+treeview-js           # Tree view visualization
+bootstrap             # UI components and styling
+jquery                # DOM manipulation
+
+# File Processing
+python-magic            # For better file type detection
+mimetypes              # For file type handling
+concurrent.futures     # For parallel processing
+pathlib               # For path manipulation
+
+# Data Management
+sqlalchemy            # Database for storing metadata
+alembic              # Database migrations
+
+# Utility packages
+tqdm                  # For progress bars
+colorama             # For colored terminal output
+pyyaml               # YAML configuration support
+python-dotenv        # Environment variable management
+
+# Development dependencies
+black                # Code formatting
+pylint              # Code linting
+pytest              # For testing
+pytest-cov          # For test coverage
+werkzeug            # Development server
