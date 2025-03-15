@@ -1,16 +1,12 @@
 import os
 import json
+import csv
 import pytesseract
 from PIL import Image
-from multiprocessing import Pool
 import pdfplumber
+import subprocess
+from multiprocessing import Pool
 from docx import Document
-import ollama
-import time
-
-# Configure Ollama
-OLLAMA_HOST = os.getenv('OLLAMA_HOST', 'http://localhost:11434')
-MODEL_NAME = 'qwen:7b'  # Using Qwen model for better categorization
 
 # Function to create a prompt for the LLM
 def create_prompt(file_summaries):
@@ -27,26 +23,27 @@ def create_prompt(file_summaries):
     suggested_cats = analyze_files_for_categories(file_summaries)
     categories_str = '\n           - '.join(suggested_cats)
     
-    prompt = f"""Analyze and categorize these files based on content and type:
-    Files: {json.dumps(file_summaries)}
-    Suggested Categories: {categories_str}
-    
-    Return JSON with structure:
-    {{
-        "categories": {{
-            "category_name": {{
-                "files": ["file_path1"],
-                "confidence": 0.95,
-                "tags": ["tag1"]
-            }}
-        }},
-        "analytics": {{
-            "total_files": <number>,
-            "categorized_files": <number>,
-            "uncategorized_files": <number>,
-            "average_confidence": <number>
-        }}
-    }}"""
+    prompt = f"""
+    ## Tasks
+        1. **Task 1**: Read through each file's content and metadata.
+        2. **Task 2**: Identify key themes: academic, technical, personal, machine learning, etc.
+        3. **Task 3**: Create specific content-based labels like:
+           - {categories_str}
+        4. **Task 4**: Return dict format {{'label': [('inp_path', 'label/filename')]}}
+
+    ## Rules
+        - Use descriptive, content-specific labels
+        - Group similar content together
+        - Maintain consistent naming format
+
+    ## Output Format
+    Return a json object containing:
+    - **proposed_struct**: {{label: [(inp_path, label/filename)]}}
+    - **errors**: "no errors occurred happy happy" or error description
+    - **spare**: Your categorization insights
+
+    **Input Data**: {json.dumps(file_summaries)}
+    """
     return prompt
 
 # Extract text from an image using OCR (Tesseract)
@@ -146,9 +143,11 @@ def process_file(file_path):
             file_info['type'] = 'text'
 
         else:
+            print(f"Skipping unsupported file type: {file_path}")
             file_info['type'] = 'unknown'
 
     except Exception as e:
+        print(f"Error processing {file_path}: {e}")
         file_info['error'] = str(e)
 
     # Summarize content if too large
@@ -160,142 +159,39 @@ def process_file(file_path):
 # Function to analyze files for suggested categories
 def analyze_files_for_categories(file_summaries):
     """
-    Pre-analyze files to suggest appropriate categories based on content and metadata.
-    
-    Args:
-        file_summaries (dict): Dictionary containing file information and content.
-        
-    Returns:
-        list: List of suggested categories with hierarchical structure.
+    Pre-analyze files to suggest appropriate categories.
     """
-    # Define hierarchical category patterns
-    category_patterns = {
-        'Documents': {
-            'Academic': {
-                'patterns': ['research', 'paper', 'thesis', 'study', 'academic'],
-                'tags': ['education', 'research', 'academic']
-            },
-            'Technical': {
-                'patterns': ['documentation', 'manual', 'guide', 'api', 'specification'],
-                'tags': ['technical', 'reference', 'guide']
-            },
-            'Business': {
-                'patterns': ['proposal', 'contract', 'agreement', 'invoice', 'report'],
-                'tags': ['business', 'legal', 'financial']
-            }
-        },
-        'Code': {
-            'Source Code': {
-                'patterns': ['code', 'script', 'program', 'implementation', 'class', 'function'],
-                'tags': ['development', 'programming', 'source']
-            },
-            'Configuration': {
-                'patterns': ['config', 'settings', 'env', 'setup', 'init'],
-                'tags': ['configuration', 'setup', 'environment']
-            },
-            'Data': {
-                'patterns': ['json', 'csv', 'xml', 'database', 'sql'],
-                'tags': ['data', 'database', 'storage']
-            }
-        },
-        'Media': {
-            'Images': {
-                'patterns': ['photo', 'image', 'picture', 'screenshot', 'diagram'],
-                'tags': ['visual', 'image', 'photo']
-            },
-            'Presentations': {
-                'patterns': ['presentation', 'slides', 'deck', 'demo'],
-                'tags': ['presentation', 'slides', 'deck']
-            },
-            'Videos': {
-                'patterns': ['video', 'recording', 'screencast', 'tutorial'],
-                'tags': ['video', 'media', 'recording']
-            }
-        },
-        'Project': {
-            'Documentation': {
-                'patterns': ['readme', 'docs', 'wiki', 'guide', 'tutorial'],
-                'tags': ['documentation', 'guide', 'reference']
-            },
-            'Planning': {
-                'patterns': ['plan', 'roadmap', 'timeline', 'milestone', 'schedule'],
-                'tags': ['planning', 'project', 'timeline']
-            },
-            'Meetings': {
-                'patterns': ['meeting', 'minutes', 'agenda', 'discussion', 'notes'],
-                'tags': ['meeting', 'collaboration', 'discussion']
-            }
-        },
-        'Personal': {
-            'Notes': {
-                'patterns': ['note', 'journal', 'diary', 'todo', 'reminder'],
-                'tags': ['notes', 'personal', 'reminder']
-            },
-            'Finance': {
-                'patterns': ['budget', 'expense', 'receipt', 'invoice', 'payment'],
-                'tags': ['finance', 'money', 'expense']
-            },
-            'Schedule': {
-                'patterns': ['calendar', 'schedule', 'appointment', 'event', 'planner'],
-                'tags': ['schedule', 'calendar', 'planning']
-            }
-        }
+    # Common patterns to look for in filenames and content
+    patterns = {
+        'machine_learning': ['ml', 'machine learning', 'ai', 'artificial intelligence', 'data science'],
+        'academic_materials': ['paper', 'research', 'study', 'thesis', 'academic', 'education'],
+        'personal_photos': ['photo', 'image', 'picture', 'camera', 'screenshot'],
+        'project_documentation': ['project', 'documentation', 'report', 'design', 'specification'],
+        'technical_guides': ['guide', 'manual', 'instruction', 'tutorial', 'how-to'],
+        'meeting_notes': ['meeting', 'minutes', 'discussion', 'call', 'conference'],
+        'presentations': ['presentation', 'slides', 'demo', 'deck'],
+        'source_code': ['code', 'script', 'program', 'implementation'],
+        'financial_documents': ['finance', 'budget', 'expense', 'cost', 'payment'],
+        'pet_related': ['pet', 'dog', 'cat', 'animal'],
+        'schedule_planning': ['schedule', 'plan', 'calendar', 'timetable', 'planner'],
+        'gaming_content': ['game', 'gaming', 'play', 'roblox'],
     }
     
-    # Initialize category matches with confidence scores
-    category_matches = {}
+    suggested_categories = set()
     
     # Analyze each file
     for file_path, info in file_summaries.items():
-        file_type = info.get('type', '').lower()
         filename = os.path.basename(file_path).lower()
         content = str(info.get('content', '')).lower()
         
-        # Check each category and subcategory
-        for main_cat, subcats in category_patterns.items():
-            for subcat, details in subcats.items():
-                confidence = 0
-                matches = 0
-                
-                # Check patterns in filename and content
-                for pattern in details['patterns']:
-                    if pattern in filename:
-                        confidence += 0.4
-                        matches += 1
-                    if pattern in content:
-                        confidence += 0.6
-                        matches += 1
-                
-                # Adjust confidence based on file type
-                if file_type:
-                    if file_type in main_cat.lower():
-                        confidence += 0.2
-                    if any(tag in file_type for tag in details['tags']):
-                        confidence += 0.1
-                
-                # Normalize confidence score
-                if matches > 0:
-                    confidence = min(confidence, 1.0)
-                    if subcat not in category_matches:
-                        category_matches[subcat] = {
-                            'confidence': confidence,
-                            'count': 1,
-                            'parent': main_cat,
-                            'tags': details['tags']
-                        }
-                    else:
-                        # Update existing category stats
-                        prev = category_matches[subcat]
-                        prev['confidence'] = (prev['confidence'] * prev['count'] + confidence) / (prev['count'] + 1)
-                        prev['count'] += 1
+        # Check each pattern
+        for category, keywords in patterns.items():
+            for keyword in keywords:
+                if keyword in filename or keyword in content:
+                    suggested_categories.add(category)
+                    break
     
-    # Convert matches to suggested categories
-    suggested = []
-    for subcat, details in category_matches.items():
-        if details['confidence'] >= 0.3:  # Minimum confidence threshold
-            suggested.append(f"{details['parent']}/{subcat} (confidence: {details['confidence']:.2f})")
-    
-    return suggested if suggested else [
+    return list(suggested_categories) if suggested_categories else [
         'machine_learning_materials',
         'academic_documents',
         'personal_media',
@@ -307,579 +203,435 @@ def analyze_files_for_categories(file_summaries):
 # Function to run the local Ollama model via subprocess
 def run_ollama_model(prompt):
     """
-    Run the Ollama model to analyze and categorize files.
-    
+    Run the locally installed Ollama model (qwen2:7b) via subprocess and get the response.
+
     Args:
-        prompt (str): The prompt containing file information to analyze.
-        
+        prompt (str): The prompt to send to the model.
+
     Returns:
-        dict: A dictionary containing categorized files and analytics.
+        dict: The JSON response from Ollama.
     """
     try:
-        # Call Ollama with the prompt
-        response = ollama.chat(model=MODEL_NAME, messages=[{
-            'role': 'user',
-            'content': prompt
-        }])
-
-        # Parse the response
-        try:
-            # Extract the JSON part from the response
-            response_text = response['message']['content']
-            start_idx = response_text.find('{')
-            end_idx = response_text.rfind('}')
-            if start_idx != -1 and end_idx != -1:
-                json_str = response_text[start_idx:end_idx + 1]
-                result = json.loads(json_str)
-                
-                # Validate and structure the result
-                if 'categories' in result:
-                    # Convert to the expected format
-                    proposed_struct = {}
-                    total_confidence = 0
-                    total_files = 0
-                    
-                    # Process each category
-                    for category, info in result['categories'].items():
-                        if 'files' in info:
-                            # Add files to the proposed structure
-                            proposed_struct[category] = info['files']
-                            
-                            # Update confidence metrics
-                            confidence = info.get('confidence', 0.0)
-                            total_confidence += confidence * len(info['files'])
-                            total_files += len(info['files'])
-                    
-                    # Calculate analytics
-                    analytics = {
-                        'total_files': total_files,
-                        'categorized_files': total_files,
-                        'uncategorized_files': 0,
-                        'average_confidence': round(total_confidence / total_files if total_files > 0 else 0, 2),
-                        'categories_count': len(proposed_struct),
-                        'largest_category': max(
-                            ((cat, len(files)) for cat, files in proposed_struct.items()),
-                            key=lambda x: x[1],
-                            default=('none', 0)
-                        )[0]
-                    }
-                    
-                    # Add success flag
-                    return {
-                        'success': True,
-                        'proposed_struct': proposed_struct,
-                        'analytics': analytics,
-                        'message': 'Files successfully categorized'
-                    }
-                else:
-                    raise ValueError('Invalid response format: missing categories')
-            else:
-                raise ValueError('Could not find JSON in response')
-        except json.JSONDecodeError as e:
-            raise ValueError(f'Failed to parse JSON response: {str(e)}')
-    except Exception as e:
-        return {
-            'success': False,
-            'proposed_struct': {'uncategorized': []},
-            'analytics': {
-                'total_files': 0,
-                'categorized_files': 0,
-                'uncategorized_files': 0,
-                'average_confidence': 0,
-                'error': str(e)
-            },
-            'message': f'Error analyzing files: {str(e)}'
-        }
-    try:
-        # First check if Ollama is running
-        status = subprocess.run(["ollama", "list"], capture_output=True, text=True)
-        if status.returncode != 0:
-            print("Starting Ollama service...")
-            subprocess.Popen(["ollama", "serve"])
-            # Wait for service to start
-            import time
-            time.sleep(5)
-        
-        # Run Ollama with the Qwen2 model
-        print("Running Ollama model...")
+        # Run Ollama locally
         result = subprocess.run(
-            ["ollama", "run", "qwen2:7b", "--format json", prompt],
-            capture_output=True,
-            text=True,
-            env={**os.environ, 'OLLAMA_HOST': 'localhost:11434'}
+            ["ollama", "run", "qwen2:7b", prompt],
+            capture_output=True, text=True
         )
 
         # Check if the command was successful
         if result.returncode != 0:
-            print(f"Ollama error: {result.stderr}")
-            return {
-                'proposed_struct': {},
-                'errors': f'Failed to run Ollama: {result.stderr}',
-                'spare': 'Error occurred during model execution'
-            }
+            return None
 
-        # Process the model's output
-        output = result.stdout.strip()
-        print(f"Model output: {output[:200]}...")
-        
         try:
-            # Try to extract JSON from the response
-            # Look for JSON-like structure in the output
-            import re
-            json_match = re.search(r'\{.*\}', output, re.DOTALL)
+            # Try to parse the response as JSON
+            return json.loads(result.stdout)
+        except json.JSONDecodeError:
+            # If not valid JSON, analyze content and create categories
+            content_analysis = result.stdout.lower()
             
-            if json_match:
-                json_str = json_match.group(0)
-                response = json.loads(json_str)
+            # Initialize categories based on content analysis
+            proposed_struct = {}
+            
+            # Look for content-based indicators
+            for file_path in os.listdir(dir_path):
+                full_path = os.path.join(dir_path, file_path)
+                file_content = ""
                 
-                # Validate the response structure
-                if isinstance(response, dict) and 'proposed_struct' in response:
-                    return response
-            
-            # If we couldn't parse JSON or it's not in the expected format,
-            # try to parse the model's natural language response
-            categories = {}
-            current_category = None
-            
-            # Split output into lines and process each line
-            for line in output.split('\n'):
-                line = line.strip()
+                # Get file content for analysis
+                if file_path.lower().endswith('.pdf'):
+                    file_content = extract_text_from_pdf(full_path)
+                elif file_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    file_content = extract_text_from_image(full_path)
+                else:
+                    try:
+                        with open(full_path, 'r', encoding='utf-8') as f:
+                            file_content = f.read()
+                    except:
+                        file_content = ""
                 
-                # Look for category headers
-                if line.endswith(':') or 'category:' in line.lower():
-                    current_category = line.replace(':', '').strip()
-                    categories[current_category] = []
-                # Look for file paths under current category
-                elif current_category and line and not line.startswith(('*', '-', '#')):
-                    # Clean up the file path
-                    file_path = line.strip('"').strip("'").strip()
-                    if file_path:
-                        categories[current_category].append(
-                            [file_path, f"{current_category}/{os.path.basename(file_path)}"]
-                        )
+                # Analyze content and filename to determine category
+                content = (file_content + " " + file_path).lower()
+                
+                # Determine category based on content analysis
+                if 'acknowledgement' in content or 'thank' in content:
+                    category = 'Academic_Documents'
+                elif 'logo' in content or 'design' in content:
+                    category = 'Design_Assets'
+                elif 'rainbow' in content or 'wallhaven' in content:
+                    category = 'Artwork'
+                else:
+                    category = 'Other'
+                
+                # Add file to appropriate category
+                if category not in proposed_struct:
+                    proposed_struct[category] = []
+                proposed_struct[category].append([full_path, f"{category}/{file_path}"])
             
             return {
-                'proposed_struct': categories,
+                'proposed_struct': proposed_struct,
                 'errors': 'no errors occurred happy happy',
-                'spare': 'Categories extracted from model response'
-            }
-            
-        except Exception as e:
-            print(f"Error parsing model output: {e}")
-            # Fall back to basic content-based categorization
-            return {
-                'proposed_struct': {
-                    'documents': [],
-                    'images': [],
-                    'code': [],
-                    'other': []
-                },
-                'errors': f'Failed to parse model output: {str(e)}',
-                'spare': 'Using fallback categorization'
+                'spare': 'Categories created based on content analysis'
             }
             
     except Exception as e:
-        print(f"Unexpected error in run_ollama_model: {e}")
-        return {
-            'proposed_struct': {},
-            'errors': f'Unexpected error: {str(e)}',
-            'spare': 'Error occurred during model execution'
-        }
+        return None
 
 # Function to get the primary category based on file type
 def get_file_type_category(file_info):
     """
-    Get the primary category based on file type with improved detection.
-    
-    Args:
-        file_info (dict): Dictionary containing file information
-        
-    Returns:
-        str: Primary category
+    Get the primary category based on file type.
     """
-    # Enhanced file type mappings with more specific categories
-    type_mappings = {
-        'text': {
-            'extensions': ['.txt', '.md', '.rst'],
-            'category': 'documents'
-        },
-        'source': {
-            'extensions': ['.py', '.js', '.java', '.cpp', '.h', '.cs', '.rb', '.php'],
-            'category': 'code'
-        },
-        'image': {
-            'extensions': ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp'],
-            'category': 'images'
-        },
-        'document': {
-            'extensions': ['.pdf', '.doc', '.docx', '.odt', '.rtf'],
-            'category': 'documents'
-        },
-        'spreadsheet': {
-            'extensions': ['.csv', '.xls', '.xlsx', '.ods'],
-            'category': 'data'
-        },
-        'presentation': {
-            'extensions': ['.ppt', '.pptx', '.odp', '.key'],
-            'category': 'presentations'
-        },
-        'video': {
-            'extensions': ['.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm'],
-            'category': 'videos'
-        },
-        'audio': {
-            'extensions': ['.mp3', '.wav', '.ogg', '.m4a', '.flac'],
-            'category': 'audio'
-        },
-        'archive': {
-            'extensions': ['.zip', '.rar', '.7z', '.tar', '.gz'],
-            'category': 'archives'
-        },
-        'config': {
-            'extensions': ['.json', '.yaml', '.yml', '.ini', '.conf', '.env'],
-            'category': 'configuration'
-        }
-    }
+    ext = file_info['ext'].lower()
     
-    # Get file extension
-    ext = os.path.splitext(file_info['name'])[1].lower()
-    
-    # Find matching type based on extension
-    for file_type, info in type_mappings.items():
-        if ext in info['extensions']:
-            return info['category']
-    
-    # Default category based on content type
-    mime_type = file_info.get('type', '').lower()
-    if 'text' in mime_type:
-        return 'documents'
-    elif 'image' in mime_type:
+    # Image files
+    if ext in ['.jpg', '.jpeg', '.png', '.gif']:
         return 'images'
-    elif 'video' in mime_type:
-        return 'videos'
-    elif 'audio' in mime_type:
-        return 'audio'
-    
-    return 'others'
+        
+    # Document files
+    if ext in ['.pdf', '.docx', '.doc']:
+        return 'documents'
+        
+    # Text files
+    if ext in ['.txt', '.md']:
+        return 'text_files'
+        
+    # Spreadsheets
+    if ext in ['.xlsx', '.csv']:
+        return 'spreadsheets'
+        
+    return 'other_files'
 
-# Function to determine subcategory based on content analysis using a more sophisticated approach
+# Function to determine subcategory based on content analysis
 def analyze_content_for_subcategory(filename, content, primary_category):
     """
     Determine subcategory based on content analysis.
-    
-    Args:
-        filename (str): Name of the file
-        content (str): Content of the file
-        primary_category (str): Primary category based on file type
-        
-    Returns:
-        str: Determined subcategory
     """
-    # Convert to lowercase for case-insensitive matching
-    content = content.lower()
     filename = filename.lower()
+    content = str(content).lower()
     
-    # Define category patterns with weights and required matches
-    category_patterns = {
-        'development': {
-            'patterns': ['class', 'function', 'import', 'def ', 'var ', 'const ', 'module', 'package'],
-            'extensions': ['.py', '.js', '.java', '.cpp', '.h', '.cs'],
-            'weight': 1.5,
-            'min_matches': 2
+    # Patterns for different types of content
+    patterns = {
+        'images': {
+            'screenshots': ['screenshot', 'screen shot', 'screen_shot'],
+            'pet_photos': ['dog', 'cat', 'pet'],
+            'technical_diagrams': ['diagram', 'architecture', 'system', 'module'],
+            'personal_photos': ['photo', 'picture', 'image']
         },
-        'documentation': {
-            'patterns': ['readme', 'guide', 'documentation', 'manual', 'tutorial', 'howto', 'docs'],
-            'extensions': ['.md', '.txt', '.pdf', '.doc', '.docx'],
-            'weight': 1.2,
-            'min_matches': 1
+        'documents': {
+            'academic_papers': ['paper', 'research', 'study', 'thesis'],
+            'technical_docs': ['technical', 'documentation', 'guide', 'manual'],
+            'project_reports': ['report', 'project', 'analysis'],
+            'presentations': ['presentation', 'slides', 'deck'],
+            'learning_materials': ['tutorial', 'course', 'learning', 'education']
         },
-        'configuration': {
-            'patterns': ['config', 'settings', 'env', 'setup', 'init', 'properties'],
-            'extensions': ['.json', '.yaml', '.yml', '.ini', '.conf', '.env'],
-            'weight': 1.3,
-            'min_matches': 1
-        },
-        'data': {
-            'patterns': ['data', 'dataset', 'training', 'test', 'validation', 'sample'],
-            'extensions': ['.csv', '.json', '.xml', '.sql', '.db'],
-            'weight': 1.4,
-            'min_matches': 1
-        },
-        'media': {
-            'patterns': ['image', 'photo', 'video', 'audio', 'recording', 'thumbnail'],
-            'extensions': ['.jpg', '.png', '.gif', '.mp4', '.mp3', '.wav'],
-            'weight': 1.1,
-            'min_matches': 1
-        },
-        'research': {
-            'patterns': ['research', 'paper', 'study', 'analysis', 'experiment', 'methodology'],
-            'extensions': ['.pdf', '.doc', '.docx', '.tex'],
-            'weight': 1.2,
-            'min_matches': 2
+        'text_files': {
+            'code_files': ['code', 'script', 'program'],
+            'notes': ['note', 'notes', 'summary'],
+            'documentation': ['doc', 'guide', 'readme'],
+            'data_files': ['data', 'dataset', 'training']
         }
     }
     
-    # Calculate scores for each category
-    scores = {}
-    for category, rules in category_patterns.items():
-        score = 0
-        matches = 0
-        
-        # Check filename and extension
-        for ext in rules['extensions']:
-            if filename.endswith(ext):
-                score += rules['weight'] * 2
-                matches += 1
-                break
-        
-        # Check content patterns
-        for pattern in rules['patterns']:
-            if pattern in content:
-                score += rules['weight']
-                matches += 1
-        
-        # Only consider categories that meet minimum match criteria
-        if matches >= rules['min_matches']:
-            scores[category] = score
+    # Get patterns for this primary category
+    category_patterns = patterns.get(primary_category, {})
     
-    # Get the best matching category
-    if scores:
-        best_category = max(scores.items(), key=lambda x: x[1])[0]
-        return f"{best_category}_{primary_category}"
+    # Check each pattern
+    for subcategory, keywords in category_patterns.items():
+        for keyword in keywords:
+            if keyword in filename or keyword in content:
+                return subcategory
+    
+    # If no match found, use content-based categories
+    content_categories = {
+        'machine_learning': ['ml', 'machine learning', 'ai', 'artificial intelligence'],
+        'academic': ['academic', 'education', 'study', 'research'],
+        'personal': ['personal', 'private', 'my'],
+        'project': ['project', 'development', 'implementation'],
+        'business': ['business', 'company', 'corporate']
+    }
+    
+    for category, keywords in content_categories.items():
+        for keyword in keywords:
+            if keyword in filename or keyword in content:
+                return f"{category}_{primary_category}"
     
     return primary_category
 
-# Function to analyze file contents and organize them into folders with improved categorization
+# Function to analyze file contents and organize them into folders
 def file_content_analysis(dir_path, dry_run=False, force=False):
     """
     Analyze file contents in the specified directory and organize them into folders based on their content.
 
     Args:
-        dir_path (str): Path of the directory containing the input files
-        dry_run (bool): If True, only simulate the organization
-        force (bool): If True, overwrite existing files
-        
+        dir_path (str): Path of the directory containing the input files.
+        dry_run (bool): If True, only simulate the organization without moving files
+        force (bool): If True, overwrite existing files in target locations
+
     Returns:
-        dict: Proposed structure and performance data
+        dict: Proposed structure of organized files and performance data.
     """
-    try:
-        start_time = time.time()
-        
-        # Get all files recursively
-        files = []
-        for root, _, filenames in os.walk(dir_path):
-            for filename in filenames:
-                if not filename.startswith('.') and not filename.startswith('~'):
-                    file_path = os.path.join(root, filename)
-                    if os.path.isfile(file_path):
-                        files.append(file_path)
+    import time
+    start_time = time.time()
+    
+    # Get all files in the specified directory and subdirectories
+    files = []
+    for root, _, filenames in os.walk(dir_path):
+        for filename in filenames:
+            if not filename.startswith('.') and not filename.startswith('~'):
+                file_path = os.path.join(root, filename)
+                if os.path.isfile(file_path):
+                    files.append(file_path)
 
-        if not files:
-            return {
-                'proposed_struct': {},
-                'errors': 'No files found in the directory',
-                'spare': 'The specified directory is empty',
-                'performance_data': {
-                    'time_taken(s)': 0,
-                    'dry_run': dry_run,
-                    'files_moved': 0,
-                    'directories_created': 0
-                }
+    if not files:
+        return {
+            'proposed_struct': {},
+            'errors': 'No files found in the directory',
+            'spare': 'The specified directory is empty',
+            'performance_data': {
+                'time_taken(s)': 0,
+                'dry_run': dry_run,
+                'files_moved': 0,
+                'directories_created': 0
             }
-
-        # Process files in parallel
-        with Pool(processes=4) as pool:
-            results = pool.map(process_file, files)
-
-        # Create file summaries
-        file_summaries = {}
-        for file_path, content in results:
-            try:
-                content_info = json.loads(content)
-                if content_info:
-                    file_summaries[file_path] = content_info
-            except json.JSONDecodeError:
-                continue
-
-        if not file_summaries:
-            return {
-                'proposed_struct': {},
-                'errors': 'No valid files could be processed',
-                'spare': 'None of the files could be analyzed',
-                'performance_data': {
-                    'time_taken(s)': time.time() - start_time,
-                    'total_files': len(files),
-                    'dry_run': dry_run
-                }
-            }
-
-        # Categorize files with confidence scores
-        categorized_files = {}
-        dirs_created = set()
-        files_moved = 0
-        
-        for file_path, file_info in file_summaries.items():
-            # Get primary and subcategories
-            primary_category = get_file_type_category(file_info)
-            subcategory = analyze_content_for_subcategory(
-                file_info['name'],
-                file_info.get('content', ''),
-                primary_category
-            )
-            
-            # Calculate confidence score based on content matches
-            confidence_score = 0.0
-            if 'content' in file_info and file_info['content']:
-                # Add confidence based on content analysis
-                content_patterns = {
-                    'development': ['class', 'function', 'import'],
-                    'documentation': ['readme', 'guide', 'manual'],
-                    'data': ['dataset', 'training', 'test'],
-                    'media': ['image', 'video', 'audio']
-                }
-                
-                matches = 0
-                total_patterns = 0
-                for patterns in content_patterns.values():
-                    total_patterns += len(patterns)
-                    for pattern in patterns:
-                        if pattern in file_info['content'].lower():
-                            matches += 1
-                
-                confidence_score = min(0.8, matches / total_patterns + 0.2)
-            else:
-                # Base confidence on file extension matching
-                confidence_score = 0.6
-            
-            # Create category structure
-            category = subcategory
-            if confidence_score < 0.4:
-                category = 'others'
-            
-            # Create category in structure
-            if category not in categorized_files:
-                categorized_files[category] = {
-                    'files': [],
-                    'confidence': confidence_score,
-                    'tags': []
-                }
-            
-            # Add file to category
-            new_path = f"{category}/{file_info['name']}"
-            categorized_files[category]['files'].append(new_path)
-            
-            # Update confidence score as average
-            current_conf = categorized_files[category]['confidence']
-            current_files = len(categorized_files[category]['files'])
-            categorized_files[category]['confidence'] = (current_conf * (current_files - 1) + confidence_score) / current_files
-            
-            # Create directory and move file if not dry run
-            if not dry_run:
-                category_path = os.path.join(dir_path, category)
-                if not os.path.exists(category_path):
-                    try:
-                        os.makedirs(category_path, exist_ok=True)
-                        dirs_created.add(category)
-                    except OSError as e:
-                        print(f"Error creating directory {category_path}: {e}")
-                
-                target_path = os.path.join(dir_path, new_path)
-                try:
-                    if not os.path.exists(target_path) or force:
-                        if os.path.exists(target_path):
-                            os.remove(target_path)
-                        os.rename(file_path, target_path)
-                        files_moved += 1
-                except OSError as e:
-                    print(f"Error moving file {file_path}: {e}")
-
-        # Prepare performance data
-        perf_data = {
-            'time_taken(s)': time.time() - start_time,
-            'total_files': len(files),
-            'dry_run': dry_run,
-            'directories_created': len(dirs_created),
-            'files_moved': files_moved
         }
 
+    # Analyze performance data first
+    perf_data = analyze_performance_data(files, start_time, dry_run)
+
+    # Process files
+    with Pool(processes=4) as pool:
+        results = pool.map(process_file, files)
+
+    # Create dictionary with file summaries
+    file_summaries = {}
+    for file_path, content in results:
+        try:
+            content_info = json.loads(content)
+            if content_info:  # Accept even if content is empty
+                file_summaries[file_path] = content_info
+        except json.JSONDecodeError:
+            continue
+
+    if not file_summaries:
+        perf_data['time_taken(s)'] = round(time.time() - start_time, 2)
         return {
-            'proposed_struct': categorized_files,
-            'errors': None,
-            'spare': "Files categorized by type and content with confidence scores",
+            'proposed_struct': {},
+            'errors': 'No valid files could be processed',
+            'spare': 'None of the files in the directory could be analyzed',
             'performance_data': perf_data
         }
 
-    except Exception as e:
-        return {
-            'proposed_struct': {'uncategorized': [f for f in files]},
-            'errors': str(e),
-            'performance_data': {
-                'total_files': len(files) if 'files' in locals() else 0,
-                'error': str(e)
-            }
+    # Categorize files
+    categorized_files = {}
+    dirs_created = set()
+    files_moved = 0
+    
+    for file_path, file_info in file_summaries.items():
+        # Get primary category based on file type
+        primary_category = get_file_type_category(file_info)
+        
+        # Get subcategory based on content
+        subcategory = analyze_content_for_subcategory(
+            file_info['name'],
+            file_info.get('content', ''),
+            primary_category
+        )
+        
+        # Create the category path
+        category = f"{subcategory}"
+        category_path = os.path.join(dir_path, category)
+        
+        # Track directory creation
+        if not dry_run and not os.path.exists(category_path):
+            try:
+                os.makedirs(category_path, exist_ok=True)
+                dirs_created.add(category)
+            except OSError as e:
+                print(f"Error creating directory {category_path}: {e}")
+        
+        # Add to categorized files
+        if category not in categorized_files:
+            categorized_files[category] = []
+        
+        new_path = f"{category}/{file_info['name']}"
+        target_path = os.path.join(dir_path, new_path)
+        
+        # Handle file movement
+        if not dry_run:
+            try:
+                if not os.path.exists(target_path) or force:
+                    if os.path.exists(target_path):
+                        os.remove(target_path)
+                    os.rename(file_path, target_path)
+                    files_moved += 1
+            except OSError as e:
+                print(f"Error moving file {file_path}: {e}")
+        
+        categorized_files[category].append([file_path, new_path])
+
+    # Update performance metrics
+    perf_data['time_taken(s)'] = round(time.time() - start_time, 2)
+    perf_data['directories_created'] = len(dirs_created)
+    perf_data['files_moved'] = files_moved
+
+    # Create the result structure with performance data
+    result = {
+        'proposed_struct': categorized_files,
+        'errors': "no errors occurred happy happy",
+        'spare': "Files categorized by type and content",
+        'performance_data': perf_data
+    }
+
+    return result
+
+def analyze_performance_data(file_list, start_time=None, dry_run=False):
+    """
+    Analyze performance data and compute file statistics.
+    
+    Args:
+        file_list (List): List of file paths to analyze
+        start_time (float): Start time of analysis (optional)
+        dry_run (bool): Whether this is a dry run
+        
+    Returns:
+        Dict: Performance data with file statistics
+    """
+    try:
+        import time
+        current_time = time.time()
+        
+        # Initialize counters
+        N = len(file_list)
+        img_num = 0
+        doc_num = 0
+        uncat_num = 0
+        image_size = 0
+        doc_size = 0
+        uncat_size = 0
+        
+        # Track file grouping
+        grouped_files = {
+            'images': [],
+            'documents': [],
+            'unclassified': []
         }
+        
+        # Process each file
+        for file_path in file_list:
+            try:
+                file_size = os.path.getsize(file_path)
+                ext = os.path.splitext(file_path)[1].lower()
+                
+                # Categorize files
+                if ext in ['.jpg', '.jpeg', '.png', '.gif']:
+                    img_num += 1
+                    image_size += file_size
+                    grouped_files['images'].append(file_path)
+                elif ext in ['.pdf', '.docx', '.doc', '.txt', '.csv']:
+                    doc_num += 1
+                    doc_size += file_size
+                    grouped_files['documents'].append(file_path)
+                else:
+                    uncat_num += 1
+                    uncat_size += file_size
+                    grouped_files['unclassified'].append(file_path)
+                    
+            except OSError:
+                uncat_num += 1
+                grouped_files['unclassified'].append(file_path)
+        
+        # Calculate time taken if start_time was provided
+        time_taken = round(current_time - start_time, 2) if start_time else 0
+        
+        # Return performance data in the required format
+        perf_data = {
+            "total_files": N,
+            "#image_files": img_num,
+            "image_size(B)": image_size,
+            "#document_files": doc_num,
+            "document_size(B)": doc_size,
+            "#unclassified_files": uncat_num,
+            "unclassified_size(B)": uncat_size,
+            "time_taken(s)": time_taken,
+            "dry_run": dry_run,
+            "grouped_files": grouped_files,
+            "directories_created": 0,  # Will be updated during file movement
+            "files_moved": 0  # Will be updated during file movement
+        }
+        
+        return perf_data
+        
+    except Exception as e:
+        print(f"Error analyzing performance data: {str(e)}")
+        return {}
 
-
-def display_category_tree(categories, indent=0):
-    """Display the category tree structure with file counts and confidence scores.
+def write_analytics_to_csv(analysis_results):
+    """
+    Write analysis results to a CSV file.
     
     Args:
-        categories (dict): Dictionary containing category information
-        indent (int): Current indentation level
+        analysis_results (Dict): Dictionary containing analysis results
     """
-    for category, info in categories.items():
-        prefix = '  ' * indent + ('└─ ' if indent > 0 else '')
-        file_count = len(info.get('files', []))
-        confidence = info.get('confidence', 0.0)
-        tags = ', '.join(info.get('tags', []))
-        
-        # Print category with stats
-        print(f"{prefix}{category} ({file_count} files, {confidence:.2f} confidence)")
-        if tags:
-            print(f"{' ' * (len(prefix) + 2)}Tags: {tags}")
-            
-        # Print files if any
-        if file_count > 0:
-            for file_path in info['files']:
-                print(f"{' ' * (len(prefix) + 2)}├─ {os.path.basename(file_path)}")
-        
-        # Recursively display subcategories
-        if 'subcategories' in info:
-            display_category_tree(info['subcategories'], indent + 1)
+    try:
+        with open('analytics.csv', 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            # Write header and value rows
+            writer.writerow(['Attribute', 'Value'])
+            for key, value in analysis_results.items():
+                writer.writerow([key, value])
+                
+    except Exception as e:
+        print(f"Error writing to CSV file: {str(e)}")
 
-def display_organization_summary(result):
-    """Display a comprehensive summary of file organization.
-    
-    Args:
-        result (dict): Result dictionary from file_content_analysis
-    """
-    print("\n=== File Organization Summary ===")
-    print("\nPerformance Metrics:")
-    perf = result.get('performance_data', {})
-    print(f"├─ Analysis Time: {perf.get('time_taken(s)', 0):.2f} seconds")
-    print(f"├─ Total Files: {perf.get('total_files', 0)}")
-    print(f"├─ Files Processed: {perf.get('files_moved', 0)}")
-    print(f"└─ Directories Created: {perf.get('directories_created', 0)}")
-    
-    print("\nFile Type Distribution:")
-    print(f"├─ Images: {perf.get('#image_files', 0)} files ({perf.get('image_size(B)', 0):,} bytes)")
-    print(f"├─ Documents: {perf.get('#document_files', 0)} files ({perf.get('document_size(B)', 0):,} bytes)")
-    print(f"└─ Unclassified: {perf.get('#unclassified_files', 0)} files ({perf.get('unclassified_size(B)', 0):,} bytes)")
-    
-    if 'proposed_struct' in result:
-        print("\nCategory Structure:")
-        display_category_tree(result['proposed_struct'])
-
+# Example usage
 if __name__ == "__main__":
-    dir_path = input("enter path")
-    
-    # Run analysis with dry_run=True first
-    print("\nAnalyzing files...")
+    dir_path = input("enter path\n")
+    # Run analysis with dry_run=True first to show what would happen
+    print("\nDry Run Analysis:")
     result = file_content_analysis(dir_path, dry_run=True)
     
+    # Generate analytics CSV file with enhanced metrics
+    analytics_data = {
+        'total_files': result['performance_data'].get('total_files', 0),
+        'image_files': result['performance_data'].get('#image_files', 0),
+        'image_size_bytes': result['performance_data'].get('image_size(B)', 0),
+        'document_files': result['performance_data'].get('#document_files', 0),
+        'document_size_bytes': result['performance_data'].get('document_size(B)', 0),
+        'unclassified_files': result['performance_data'].get('#unclassified_files', 0),
+        'unclassified_size_bytes': result['performance_data'].get('unclassified_size(B)', 0),
+        'analysis_time': result['performance_data'].get('time_taken(s)', 0),
+        'num_categories': len(result['proposed_struct']),
+        'categories': ', '.join(sorted(result['proposed_struct'].keys())),
+        'directories_to_create': len(result['proposed_struct']),
+        'files_to_move': sum(len(files) for files in result['proposed_struct'].values()),
+        'errors': result.get('errors', 'None')
+    }
+    write_analytics_to_csv(analytics_data)
+    print("\nAnalytics data has been written to analytics.csv")
+    
     if result and 'proposed_struct' in result:
-        # Display comprehensive organization summary
-        display_organization_summary(result)
+        # Print file organization structure
+        print("\nProposed File Organization:")
+        categories = sorted(result['proposed_struct'].keys())
+        for category in categories:
+            files = result['proposed_struct'][category]
+            print(f"\n{category}:")
+            for file_info in files:
+                original_path, new_path = file_info
+                print(f"  - {os.path.basename(original_path)} -> {new_path}")
+        
+        # Print comprehensive performance statistics
+        print("\nPerformance Statistics:")
+        print(f"Analysis Time: {result['performance_data'].get('time_taken(s)', 0):.2f} seconds")
+        print(f"Total Files: {result['performance_data'].get('total_files', 0)}")
+        print("\nFile Type Distribution:")
+        print(f"  Images: {result['performance_data'].get('#image_files', 0)} files ({result['performance_data'].get('image_size(B)', 0):,} bytes)")
+        print(f"  Documents: {result['performance_data'].get('#document_files', 0)} files ({result['performance_data'].get('document_size(B)', 0):,} bytes)")
+        print(f"  Unclassified: {result['performance_data'].get('#unclassified_files', 0)} files ({result['performance_data'].get('unclassified_size(B)', 0):,} bytes)")
+        
+        print("\nOrganization Summary:")
+        print(f"Categories Created: {len(result['proposed_struct'])}")
+        print(f"Files to Move: {sum(len(files) for files in result['proposed_struct'].values())}")
         
         # Ask for confirmation before actual organization
         user_input = input("\nWould you like to proceed with the file organization? (yes/no): ")
@@ -887,14 +639,11 @@ if __name__ == "__main__":
             print("\nProceeding with file organization...")
             final_result = file_content_analysis(dir_path, dry_run=False, force=False)
             
-            # Display final organization results
-            if final_result:
-                print("\n=== Final Organization Results ===")
-                display_organization_summary(final_result)
-                print("\nFile organization completed successfully!")
-            else:
-                print("\nError: File organization failed.")
-            print("\nOrganization Complete!")
+            # Print final organization results
+            print("\nOrganization Complete:")
+            print(f"Time Taken: {final_result['performance_data'].get('time_taken(s)', 0):.2f} seconds")
+            print(f"Directories Created: {final_result['performance_data'].get('directories_created', 0)}")
+            print(f"Files Moved: {final_result['performance_data'].get('files_moved', 0)}")
         else:
             print("\nFile organization cancelled.")
     else:

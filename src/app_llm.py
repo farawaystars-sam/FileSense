@@ -62,10 +62,10 @@ def send_initial_struct():
 def analyze():
     try:
         data = request.json
-        dir_path = data.get('directory')
+        dir_path = data.get("user_input", "")
         
         logger.info(f"Received request to analyze directory: {dir_path}")
-        
+        print(f"in the process method: {dir_path}")
         if not dir_path or not os.path.isdir(dir_path):
             logger.error(f"Invalid directory path: {dir_path}")
             return jsonify({

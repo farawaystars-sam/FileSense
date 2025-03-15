@@ -1,0 +1,14 @@
+Attribute,Value
+total_files,46
+image_files,12
+image_size_bytes,41881065
+document_files,34
+document_size_bytes,18063957
+unclassified_files,0
+unclassified_size_bytes,0
+analysis_time,3.21
+num_categories,12
+categories,"code_files, documents, images, learning_materials, machine_learning_documents, machine_learning_images, notes, personal_photos, pet_photos, project_documents, technical_docs, text_files"
+directories_to_create,12
+files_to_move,46
+errors,no errors occurred happy happy

@@ -1,0 +1,6 @@
+# Core dependencies
+langchain                 # For creating and managing LLM chains
+langchain-community      # For community integrations
+langchain-core          # Core langchain functionality
+langchain-ollama        # For Ollama model integration
+
